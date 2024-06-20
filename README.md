@@ -2,6 +2,8 @@
 
 ## Getting Started
 
+### Setting up the project
+
 Clone the project from the repository, then set up a virtual environment (recommended).
 
 ```shell
@@ -27,6 +29,20 @@ Install the required packages.
 pip install -r requirements.txt
 ```
 
+### Environment Variables
+
+Copy the `.env.example` file to `.env` and fill in the required environment variables.
+
+### Running the Database
+
+To run the database, use docker compose with the following command.
+
+```shell
+docker-compose -f ./build/docker-compose.yml --env-file .env up -d
+```
+
+### Running the Application
+
 To run the project, use the following command.
 
 ```shell
@@ -36,7 +52,6 @@ fastapi dev app/main.py
 ## To-do List
 
 - [x] Create a FastAPI template
-- [] Connect to Database
 - [] Create Database migrations
 - [] Create authentication system
 - [] Create CI/CD system to server (optional)
