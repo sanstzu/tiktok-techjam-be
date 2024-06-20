@@ -52,6 +52,6 @@ fastapi dev app/main.py
 ## To-do List
 
 - [x] Create a FastAPI template
-- [] Create Database migrations
-- [] Create authentication system
-- [] Create CI/CD system to server (optional)
+- [ ] Create Database migrations
+- [ ] Create authentication system
+- [ ] Create CI/CD system to server (optional)
