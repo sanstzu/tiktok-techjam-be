@@ -48,7 +48,11 @@ class TestCaseGenerator:
         yt = YouTube(self.url)
         # print(yt.streams)
 
-        yt.streams.filter(file_extension='mp4').order_by('resolution').desc().first().download(output_path=download_output, filename=file_name)
+        yt_stream =  yt.streams.filter(file_extension='mp4', type="video", resolution="1080p").order_by('resolution').desc().first()
+        if yt_stream == None:
+            yt_stream = yt.streams.filter(file_extension='mp4', type="video").order_by('resolution').desc().first()
+
+        yt_stream.download(download_output, filename=id)
         return output_path
     
     def __split(self, video_path):
