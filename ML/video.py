@@ -48,31 +48,42 @@ class TestCaseGenerator:
         yt = YouTube(self.url)
         # print(yt.streams)
 
-        yt_stream =  yt.streams.filter(file_extension='mp4', type="video", resolution="1080p").order_by('resolution').desc().first()
+        yt_stream =  yt.streams.filter(file_extension='mp4', type="video", resolution="480p").order_by('resolution').desc().first()
         if yt_stream == None:
             yt_stream = yt.streams.filter(file_extension='mp4', type="video").order_by('resolution').desc().first()
 
-        yt_stream.download(download_output, filename=id)
+        yt_stream.download(download_output, filename=file_name)
+        print("Finished downloading after: ", time.time() - start)
         return output_path
     
     def __split(self, video_path):
-        output_folder = os.path.join(frames_output)
+        output_folder = os.path.join(frames_output, extract_youtube_id(self.url))
         if os.path.exists(output_folder) == False:
             os.mkdir(output_folder)
 
-        output_image = os.path.join(output_folder, "frame_%04d.jpg")
+        output_image = os.path.join(output_folder, "frame_%04d.jpeg")
         cmd = ["ffmpeg", "-i", video_path, "-r", str(1/interval), output_image]
         os.system(" ".join(cmd))
 
 if __name__ == "__main__":
     start = time.time()
-    url = "https://www.youtube.com/watch?v=ulfJXy4QptQ"
+    url = "https://www.youtube.com/watch?v=L8ECu0f9_kA"
     generator = TestCaseGenerator(url)
     generator.execute()
     end = time.time()
     print(end-start)
     
-    
+### Note ###
+# 1 Hour Video:
+#   - 1080p:
+#       download time: 120s
+#       split time: 440s
+#   - 720p:
+#       download time: 75s
+#       split time: 140s
+#   - 480p:
+#       download time: 36s
+#       split time: 70s
         
         
     

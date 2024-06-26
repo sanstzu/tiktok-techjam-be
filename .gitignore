@@ -135,6 +135,8 @@ ENV_NAME/
 ML/frames
 ML/download
 ML/key.py
+ML/testing.txt
+ML/prompt.txt
 
 # Spyder project settings
 .spyderproject
