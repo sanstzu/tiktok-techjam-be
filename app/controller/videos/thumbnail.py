@@ -1,0 +1,18 @@
+from tempfile import SpooledTemporaryFile, mkstemp
+import os
+import app.utils.s3 as s3util
+import app.consts as consts
+from fastapi.responses import FileResponse
+
+
+TEMP_FILE_DIR = consts.TEMP_FILE_DIR
+
+def get_thumbnail_controller(video_id: str):
+    os.makedirs(TEMP_FILE_DIR, exist_ok=True)
+    tmp_file = mkstemp(None, "upload_", TEMP_FILE_DIR)
+
+    bucket_path = f"thumbnail/{video_id}.jpg"
+
+    s3util.download_from_bucket(tmp_file[1], bucket_path, "tiktok-techjam")
+    
+    return FileResponse(tmp_file[1], media_type="image/jpg", filename=f"{video_id}.jpg")
