@@ -26,7 +26,7 @@ def video_upload(
     return get_results_controller(highlight_id)
 
 
-@router.get("/{highlight_id}/results")
+@router.get("/{highlight_id}/status")
 def video_upload(
     highlight_id: str
 ): 
