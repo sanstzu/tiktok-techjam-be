@@ -168,3 +168,4 @@ cython_debug/
 
 # Add postgres-data from docker
 postgres-data/
+tmp/
