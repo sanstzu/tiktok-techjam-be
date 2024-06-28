@@ -22,3 +22,14 @@ def download_from_bucket(output_path: str, file_name: str, bucket_name: str):
         except Exception as e:
             print(f"Error downloading file from {bucket_name}/{file_name}: {e}")
             raise e
+
+def get_presigned_url(file_name: str, bucket_name: str):
+    try:
+        url = s3_client.generate_presigned_url('get_object', 
+            Params={'Bucket': bucket_name, 'Key': file_name}, 
+            ExpiresIn=3600)
+        print(f"Presigned URL generated successfully: {url}")
+        return url
+    except Exception as e:
+        print(f"Error generating presigned URL for {bucket_name}/{file_name}: {e}")
+        raise e
