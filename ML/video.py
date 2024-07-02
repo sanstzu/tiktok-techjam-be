@@ -67,7 +67,7 @@ class TestCaseGenerator:
         yt = YouTube(self.url)
 
         if not os.path.exists(output_path):
-            yt_stream =  yt.streams.filter(file_extension='mp4', type="video", resolution="1080p").order_by('resolution').desc().first()
+            yt_stream =  yt.streams.filter(file_extension='mp4', type="video", resolution="480p").order_by('resolution').desc().first()
             if yt_stream == None:
                 yt_stream = yt.streams.filter(file_extension='mp4', type="video").order_by('resolution').desc().first()
             yt_stream.download(download_output, filename=f"{id}.mp4")
@@ -220,7 +220,7 @@ if __name__ == "__main__":
     # calculate start time
     start_time = datetime.datetime.now()
 
-    url = "https://www.youtube.com/watch?v=pjvtEUmeDSk"
+    url = "https://www.youtube.com/watch?v=Gl7m0cVa37k"
     with ThreadPoolExecutor() as executor:
         generator = TestCaseGenerator(url, executor)
         generator.execute()

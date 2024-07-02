@@ -10,10 +10,10 @@ def calculate_similarity(text1, text2):
     cosine_sim = cosine_similarity(vectors)
     return cosine_sim[0, 1]
 
-def combine_scores(loudness, caption_sim, transcription_sim):
+def combine_scores(caption_sim, loudness, transcription_sim):
     max_loudness = max([frame[2] for frame in loudest_timeframes])
     normalized_loudness = loudness / max_loudness
-    combined_score = normalized_loudness * 0.5 + caption_sim * 0.25 + transcription_sim * 0.25
+    combined_score = caption_sim * 0.5 + normalized_loudness * 0.25 + transcription_sim * 0.25
     return combined_score
 
 def calculate_score(url, prompt):
