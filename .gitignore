@@ -137,7 +137,7 @@ ML/download
 ML/key.py
 ML/testing.txt
 ML/prompt.txt
-ML/audio/
+ML/audio
 
 # Spyder project settings
 .spyderproject
