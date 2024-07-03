@@ -76,10 +76,10 @@ def process_images_in_parallel(image_paths, api_key, prompt_text, user_input, nu
 
     return results
 
-def get_embedding(text, model=embedding_model):
+def get_embedding(text, model):
     return client.embeddings.create(input = [text], model=model).data[0].embedding
 
-def process_embeddings_in_parallel(results, model=embedding_model, num_threads=10):
+def process_embeddings_in_parallel(results, model, num_threads=10):
     def embed_result(result):
         return get_embedding(result['choices'][0]['message']['content'], model=model)
     
@@ -114,13 +114,12 @@ def get_similarity_score(url, prompt):
     prompt_text = get_sys_prompt('prompt.txt')
     results = []
 
+    # Captioning
     results = process_images_in_parallel(image_paths, api_key, prompt_text, user_input, num_threads=20, frames_per_request=3)
 
-    # Embedding model
+    # Embedding
     embedding_model = 'text-embedding-3-small'
-    # Embed the captions
     embedded_frame = process_embeddings_in_parallel(results, model=embedding_model, num_threads=30)
-    # Embed the query
     embedded_query = get_embedding(user_input, model=embedding_model)
     embedded_query = np.array(embedded_query).reshape(1, -1)
 

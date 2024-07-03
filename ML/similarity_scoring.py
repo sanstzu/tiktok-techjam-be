@@ -31,3 +31,8 @@ def calculate_score(url, prompt):
         ))
     
     print(scores)
+
+import time
+start_time = time.time()
+calculate_score("https://www.youtube.com/watch?v=Gl7m0cVa37k", "great view")
+print(time.time() - start_time)

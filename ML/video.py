@@ -105,7 +105,7 @@ class TestCaseGenerator:
         return output_video
     
     def __split_video(self, video_path):
-        output_folder = os.path.join(tmp_folder, "clips")
+        output_folder = os.path.join(tmp_folder, "clips", extract_youtube_id(self.url))
         if os.path.exists(output_folder) == False:
             os.mkdir(output_folder)
 
@@ -220,7 +220,7 @@ if __name__ == "__main__":
     # calculate start time
     start_time = datetime.datetime.now()
 
-    url = "https://www.youtube.com/watch?v=Gl7m0cVa37k"
+    url = "https://www.youtube.com/watch?v=hFkJJkFIA2I"
     with ThreadPoolExecutor() as executor:
         generator = TestCaseGenerator(url, executor)
         generator.execute()
