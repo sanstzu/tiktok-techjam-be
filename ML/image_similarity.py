@@ -9,6 +9,7 @@ from key import OPENAI_API_KEY
 import math
 import numpy as np
 from sklearn.metrics.pairwise import cosine_similarity
+from datetime import timedelta
 
 # Initialize client
 api_key=OPENAI_API_KEY
@@ -52,7 +53,7 @@ def make_api_request(image_paths, api_key, prompt_text, user_input):
                 *images_payload
             ]}
         ],
-        "max_tokens": 4096
+        "max_tokens": 1600
     }
 
     response = requests.post("https://api.openai.com/v1/chat/completions", headers=headers, json=payload)
@@ -79,7 +80,7 @@ def process_images_in_parallel(image_paths, api_key, prompt_text, user_input, nu
 def get_embedding(text, model):
     return client.embeddings.create(input = [text], model=model).data[0].embedding
 
-def process_embeddings_in_parallel(results, model, num_threads=10):
+def process_embeddings_in_parallel(results, model, num_threads):
     def embed_result(result):
         return get_embedding(result['choices'][0]['message']['content'], model=model)
     
@@ -97,7 +98,8 @@ def process_embeddings_in_parallel(results, model, num_threads=10):
 
     return embedded_frame
 
-
+def seconds_to_hhmmss(seconds):
+    return str(timedelta(seconds=seconds))
 
 # Get url name
 from video import extract_youtube_id
@@ -113,13 +115,20 @@ def get_similarity_score(url, prompt):
     user_input = prompt
     prompt_text = get_sys_prompt('prompt.txt')
     results = []
+    captions_dict = {}
 
     # Captioning
     results = process_images_in_parallel(image_paths, api_key, prompt_text, user_input, num_threads=20, frames_per_request=3)
+    for i in range(results):
+        try:
+            caption = results[i]['choices'][0]['message']['content']
+            captions_dict[seconds_to_hhmmss(i*5)] = caption
+        except KeyError:
+            captions_dict[seconds_to_hhmmss(i*5)] = "Missing"
 
     # Embedding
     embedding_model = 'text-embedding-3-small'
-    embedded_frame = process_embeddings_in_parallel(results, model=embedding_model, num_threads=30)
+    embedded_frame = process_embeddings_in_parallel(results, model=embedding_model, num_threads=len(results))
     embedded_query = get_embedding(user_input, model=embedding_model)
     embedded_query = np.array(embedded_query).reshape(1, -1)
 
@@ -131,9 +140,9 @@ def get_similarity_score(url, prompt):
     similarity_result = {}
     for i in range(len(results)):
         try:
-            similarity_result[i] = cosine_similarity(embedded_frame[i], embedded_query)
+            similarity_result[seconds_to_hhmmss(i*5)] = cosine_similarity(embedded_frame[i], embedded_query)
         except KeyError:
-            similarity_result[i] = 0
+            similarity_result[seconds_to_hhmmss(i*5)] = 0
             
     ranked_frame_dict = dict(sorted(similarity_result.items(), key=lambda x:x[1], reverse=True))
     

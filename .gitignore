@@ -139,6 +139,7 @@ ML/testing.txt
 ML/prompt.txt
 ML/audio
 ML/tmp
+ML/results
 
 # Spyder project settings
 .spyderproject
