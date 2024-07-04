@@ -140,10 +140,12 @@ def get_similarity_score(url, prompt):
     similarity_result = {}
     for i in range(len(results)):
         try:
-            similarity_result[seconds_to_hhmmss(i*5)] = cosine_similarity(embedded_frame[i], embedded_query)
+            similarity_result[seconds_to_hhmmss(i*5)] = cosine_similarity(embedded_frame[i], embedded_query).item()
         except KeyError:
             similarity_result[seconds_to_hhmmss(i*5)] = 0
             
     ranked_frame_dict = dict(sorted(similarity_result.items(), key=lambda x:x[1], reverse=True))
     
+    # return similarity_result for similarity result by timeframe
+    # return captions_dict for all the captions by timeframe
     return ranked_frame_dict
