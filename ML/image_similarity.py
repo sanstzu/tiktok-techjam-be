@@ -119,7 +119,7 @@ def get_similarity_score(url, prompt):
 
     # Captioning
     results = process_images_in_parallel(image_paths, api_key, prompt_text, user_input, num_threads=20, frames_per_request=3)
-    for i in range(results):
+    for i in range(len(results)):
         try:
             caption = results[i]['choices'][0]['message']['content']
             captions_dict[seconds_to_hhmmss(i*5)] = caption
@@ -127,25 +127,26 @@ def get_similarity_score(url, prompt):
             captions_dict[seconds_to_hhmmss(i*5)] = "Missing"
 
     # Embedding
-    embedding_model = 'text-embedding-3-small'
-    embedded_frame = process_embeddings_in_parallel(results, model=embedding_model, num_threads=len(results))
-    embedded_query = get_embedding(user_input, model=embedding_model)
-    embedded_query = np.array(embedded_query).reshape(1, -1)
+    # embedding_model = 'text-embedding-3-small'
+    # embedded_frame = process_embeddings_in_parallel(results, model=embedding_model, num_threads=len(results))
+    # embedded_query = get_embedding(user_input, model=embedding_model)
+    # embedded_query = np.array(embedded_query).reshape(1, -1)
 
     # similarity_result = []
     # for i in range(len(image_paths)):
     #     similarity_result.append(cosine_similarity(embedded_frame[i], embedded_query))
     # return similarity_result
 
-    similarity_result = {}
-    for i in range(len(results)):
-        try:
-            similarity_result[seconds_to_hhmmss(i*5)] = cosine_similarity(embedded_frame[i], embedded_query).item()
-        except KeyError:
-            similarity_result[seconds_to_hhmmss(i*5)] = 0
+    # similarity_result = {}
+    # for i in range(len(results)):
+    #     try:
+    #         similarity_result[seconds_to_hhmmss(i*5)] = cosine_similarity(embedded_frame[i], embedded_query).item()
+    #     except KeyError:
+    #         similarity_result[seconds_to_hhmmss(i*5)] = 0
             
-    ranked_frame_dict = dict(sorted(similarity_result.items(), key=lambda x:x[1], reverse=True))
+    # ranked_frame_dict = dict(sorted(similarity_result.items(), key=lambda x:x[1], reverse=True))
     
     # return similarity_result for similarity result by timeframe
     # return captions_dict for all the captions by timeframe
-    return similarity_result
+    
+    return captions_dict
