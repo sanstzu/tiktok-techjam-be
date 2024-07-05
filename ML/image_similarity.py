@@ -148,4 +148,4 @@ def get_similarity_score(url, prompt):
     
     # return similarity_result for similarity result by timeframe
     # return captions_dict for all the captions by timeframe
-    return ranked_frame_dict
+    return similarity_result
