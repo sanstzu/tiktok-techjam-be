@@ -1,37 +1,39 @@
 from fastapi import APIRouter, UploadFile, HTTPException
 from app.controller.highlights.results import get_results_controller
-from app.controller.highlights.start import start_highlight_task_controller
+from app.controller.highlights.upload import upload_controller 
 from app.controller.highlights.status import get_status_controller
+from typing import List
+from app.models.videos import VideoModel
 
 router = APIRouter(prefix="/highlights", tags=["highlights"])
 
-@router.get("/start")
+@router.post("/upload", response_model=str)
 def video_download(
-    video_id: str,
-    prompt: str
+    file: UploadFile,
+    prompt: List[str]
 ):
     """
     Starts task to highlight a video
     """
-    return start_highlight_task_controller(video_id, prompt)
+    return upload_controller(file, prompt)
 
-@router.get("/{highlight_id}/results")
+@router.get("/{id}/results", response_model=VideoModel)
 def video_upload(
-    highlight_id: str
+    id: str
 ): 
     """
     Get highlight results
     """
 
-    return get_results_controller(highlight_id)
+    return get_results_controller(id)
 
 
-@router.get("/{highlight_id}/status")
+@router.get("/{id}/status", response_model=float)
 def video_upload(
-    highlight_id: str
+    id: str
 ): 
     """
     Get highlight status, to check progress
     """
 
-    return get_status_controller(highlight_id)
+    return get_status_controller(id)

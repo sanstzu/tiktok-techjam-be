@@ -13,6 +13,15 @@ def upload_to_bucket(path: str, file_name:str, bucket_name: str):
     except Exception as e:
         print(f"Error uploading file to {bucket_name}/{file_name}: {e}")
         raise e
+    
+def check_file_exists(file_name: str, bucket_name: str):
+    try:
+        s3_client.head_object(Bucket=bucket_name, Key=file_name)
+        print(f"File {file_name} exists in {bucket_name}")
+        return True
+    except Exception as e:
+        print(f"File {file_name} does not exist in {bucket_name}: {e}")
+        return False
 
 def download_from_bucket(output_path: str, file_name: str, bucket_name: str):
     with open(output_path, 'wb') as f:
