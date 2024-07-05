@@ -19,4 +19,4 @@ def get_status_controller(id: str):
         raise HTTPException(status_code=404, detail="id not found")
     else:
         # TODO: Get from celery queue to check how many tasks in the group are done
-        return __get_debug_percentage()
+        return f"{__get_debug_percentage():.9f}"

@@ -28,7 +28,7 @@ def video_upload(
     return get_results_controller(id)
 
 
-@router.get("/{id}/status", response_model=float)
+@router.get("/{id}/status", response_model=str)
 def video_upload(
     id: str
 ): 
