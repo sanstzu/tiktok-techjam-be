@@ -78,7 +78,7 @@ def format_transcription_dict(transcription_dict, interval=5):
 
     return formatted_transcription_dict
 
-def get_transcription_dict(url, prompt):
+def get_transcription_dict(url):
     url = extract_youtube_id(url) + ".mp3"
     audio_path = os.path.join(".", "download", url)
     transcription = process_transcription(transcribe(audio_path))
