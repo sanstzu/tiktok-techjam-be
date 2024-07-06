@@ -40,7 +40,10 @@ async def get_session_user(request: Request, token: str = Depends(oauth2_scheme)
     
     try:
         
-        result = await database.fetch_one(query=query, values={"session_token": session_token})
+        db = get_db()
+        await db.connect()
+        result = await db.fetch_one(query=query, values={"session_token": session_token})
+        await db.disconnect()
         if result is None:
             raise HTTPException(status_code=401, detail="Session not found")
         return result["userId"]
@@ -81,11 +84,11 @@ async def add_session_user(request: Request, call_next):
             if scheme.lower() == 'bearer':
                 user_id = await get_session_user(request, token)
             else:
-                raise HTTPException(status_code=401, detail="Invalid authorization scheme or token")
+                return JSONResponse(status_code=401, content="Invalid authorization scheme or token")
         else:
-            raise HTTPException(status_code=401, detail="Authorization header not found")
+            return JSONResponse(status_code=401, content="Authorization header not found")
     except HTTPException as e:
-        raise e
+        raise JSONResponse(status_code=e.status_code, content=e.detail)
     request.state.user_id = user_id
     response = await call_next(request)
     return response
