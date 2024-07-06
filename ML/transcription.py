@@ -1,16 +1,17 @@
 from openai import OpenAI
 from key import OPENAI_API_KEY
-from sklearn.feature_extraction.text import TfidfVectorizer
 from sklearn.metrics.pairwise import cosine_similarity
-from image_similarity import get_similarity_score
 from moviepy.editor import VideoFileClip
 from datetime import timedelta
 import os
 import json
 import subprocess
 from urllib.parse import urlparse, parse_qs
+import concurrent.futures
+import numpy as np
 
 client = OpenAI(api_key=OPENAI_API_KEY)
+api_key = OPENAI_API_KEY
 
 def transcribe(audio_file_path):
     audio_file = open(audio_file_path, "rb")
@@ -95,7 +96,51 @@ def get_transcription_dict(url):
     
     transcription = process_transcription(transcribe(audio_path))
     transcription_dict = format_transcription_dict(transcription)
+
     return transcription_dict
 
+def get_embedding(text, model):
+    return client.embeddings.create(input=[text], model=model).data[0].embedding
 
+def process_embeddings_in_parallel(transcription_dict, model, num_threads):
+    results = {}
+
+    with concurrent.futures.ThreadPoolExecutor(max_workers=num_threads) as executor:
+        future_to_time = {executor.submit(get_embedding, text, model): time for time, text in transcription_dict.items()}
+        for future in concurrent.futures.as_completed(future_to_time):
+            time = future_to_time[future]
+            try:
+                embedding = future.result()
+                embedding = np.array(embedding).reshape(1, -1)
+                results[time] = embedding
+            except Exception as exc:
+                print(f'{time} generated an exception: {exc}')
+
+    return results
+
+def seconds_to_hhmmss(seconds):
+    return str(timedelta(seconds=seconds))
+
+def get_transcription_score(url, user_prompts):
+    user_inputs = user_prompts
+    embedding_model = 'text-embedding-3-small'
+    transcription_dict = get_transcription_dict(url)
+    n = len(transcription_dict)
+
+    embedded_transcriptions = process_embeddings_in_parallel(transcription_dict, embedding_model, n)
+    
+    embedded_queries = []
+    for user_input in user_inputs:
+        embedded_queries.append(np.array(get_embedding(user_input, model=embedding_model)).reshape(1, -1))
+
+    similarity_result = {}
+
+    for timeframe, embeddings in embedded_transcriptions.items():
+        scores = []
+        for embedded_query in embedded_queries:
+            score = cosine_similarity(embeddings, embedded_query).item()
+            scores.append(score)
+        similarity_result[timeframe] = scores
+    
+    return similarity_result
 

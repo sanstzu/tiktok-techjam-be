@@ -140,6 +140,7 @@ ML/prompt.txt
 ML/audio
 ML/tmp
 ML/results
+ML/testing.ipynb
 output/
 
 # Spyder project settings

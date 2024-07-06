@@ -105,7 +105,7 @@ def seconds_to_hhmmss(seconds):
 
 # Get url name
 from video import extract_youtube_id
-def get_similarity_score(url, prompt):
+def get_caption_score(url, user_prompts):
     url = extract_youtube_id(url)
 
     # Get all the image paths
@@ -113,13 +113,13 @@ def get_similarity_score(url, prompt):
     image_paths = list_files(directory)
 
     # Get User Input
-    user_input = prompt
+    user_inputs = user_prompts
     prompt_text = get_sys_prompt('prompt.txt')
     results = []
     captions_dict = {}
 
     # Captioning
-    results = process_images_in_parallel(image_paths, api_key, prompt_text, user_input, num_threads=20, frames_per_request=3)
+    results = process_images_in_parallel(image_paths, api_key, prompt_text, num_threads=30, frames_per_request=3)
     for i in range(len(results)):
         try:
             caption = results[i]['choices'][0]['message']['content']
@@ -127,4 +127,30 @@ def get_similarity_score(url, prompt):
         except KeyError:
             captions_dict[seconds_to_hhmmss(i*5)] = "Missing"
 
-    return captions_dict
+    # Embedding
+    embedding_model = 'text-embedding-3-small'
+    embedded_captions = process_embeddings_in_parallel(results, model=embedding_model, num_threads=len(results))
+    
+    embedded_queries = []
+    for user_input in user_inputs:
+        embedded_queries.append(np.array(get_embedding(user_input, model=embedding_model)).reshape(1, -1))
+
+    similarity_result = {}
+
+    for timeframe, embeddings in embedded_captions.items():
+        scores = []
+        for embedded_query in embedded_queries:
+            score = cosine_similarity(embeddings, embedded_query).item()
+            scores.append(score)
+        similarity_result[timeframe] = scores
+    
+    return similarity_result
+
+# for key in caption_dict:
+#     weighted_scores = []
+#     for i in range(len(caption_dict[key])):
+#         weighted_score = 0.7 * caption_dict[key][i] + 0.3 * transcription_dict[key][i]
+#         weighted_scores.append(weighted_score)
+#     weighted_score_dict[key] = weighted_scores
+
+# print(weighted_score_dict)

@@ -5,8 +5,8 @@ import ssl
 import yt_dlp as youtube_dl
 import numpy as np
 from sklearn.metrics.pairwise import cosine_similarity
-from image_similarity import get_similarity_score, get_embedding
-from transcription import get_transcription_dict
+from caption import get_caption_score
+from transcription import get_transcription_score
 from edit_video import extract_and_concatenate_clips
 from urllib.parse import urlparse, parse_qs
 
@@ -27,6 +27,15 @@ MAX_PROMPT = 4
 VIDEO_DURATION = 60  # seconds
 CLIP_DURATION = 15  # seconds
 
+# for key in caption_dict:
+#     weighted_scores = []
+#     for i in range(len(caption_dict[key])):
+#         weighted_score = 0.7 * caption_dict[key][i] + 0.3 * transcription_dict[key][i]
+#         weighted_scores.append(weighted_score)
+#     weighted_score_dict[key] = weighted_scores
+
+# print(weighted_score_dict)
+
 def download_video(video_url, download_path):
     ydl_opts = {
         'format': 'best',
@@ -39,29 +48,16 @@ def download_video(video_url, download_path):
         print(f"Video downloaded to {file_path}")
         return file_path
 
-def calculate_similarity_scores(caption_dict, transcription_dict, user_prompts, embedding_model='text-embedding-ada-002'):
+def calculate_similarity_scores(caption_score_dict, transcription_score_dict, user_prompts):
     similarity_scores = {}
-    
-    for timeframe, text in caption_dict.items():
-        embed1 = get_embedding(text, embedding_model)
-        scores = []
-        for prompt in user_prompts:
-            embed2 = get_embedding(prompt, embedding_model)
-            score = cosine_similarity(np.array(embed1).reshape(1, -1), np.array(embed2).reshape(1, -1)).item()
-            scores.append(score)
-        similarity_scores[timeframe] = scores
+    for key in caption_score_dict:
+        weighted_scores = []
+        for i in range(len(caption_score_dict[key])):
+            weighted_score = 0.7 * caption_score_dict[key][i] + 0.3 * transcription_score_dict[key][i]
+            weighted_scores.append(weighted_score)
+        similarity_scores[key] = weighted_scores
 
-    for timeframe, text in transcription_dict.items():
-        embed1 = get_embedding(text, embedding_model)
-        scores = []
-        for prompt in user_prompts:
-            embed2 = get_embedding(prompt, embedding_model)
-            score = cosine_similarity(np.array(embed1).reshape(1, -1), np.array(embed2).reshape(1, -1)).item()
-            scores.append(score)
-        if timeframe in similarity_scores:
-            similarity_scores[timeframe] = [max(x, y) for x, y in zip(similarity_scores[timeframe], scores)]
-        else:
-            similarity_scores[timeframe] = scores
+    print(similarity_scores)
 
     return similarity_scores
 
@@ -115,10 +111,10 @@ def main(video_url, user_prompts):
 
     print(f"Video path for processing: {video_path}")
 
-    caption_dict = get_similarity_score(video_url, user_prompts)
-    transcription_dict = get_transcription_dict(video_url)
+    caption_score_dict = get_caption_score(video_url, user_prompts)
+    transcription_score_dict = get_transcription_score(video_url, user_prompts)
 
-    similarity_scores = calculate_similarity_scores(caption_dict, transcription_dict, user_prompts)
+    similarity_scores = calculate_similarity_scores(caption_score_dict, transcription_score_dict, user_prompts)
     top_timeframes = get_top_timeframes(similarity_scores, user_prompts)
     final_timeframes = generate_timeframes_for_editing(top_timeframes)
 
@@ -130,9 +126,12 @@ def main(video_url, user_prompts):
     print(f"Video saved at {output_path}")
 
 if __name__ == "__main__":
-    video_url = "https://youtu.be/G-mmtUxSt5k?si=pg7_Ocd46aQ6XIwy"
-    user_prompts = ["cool", "shot","nice"] # Up to 4 prompts
+    import time
+    start_time = time.time()
+    video_url = "https://youtu.be/cI89stp2YsE?si=JSq2x4XO-zD7Goxm"
+    user_prompts = ["cool", "great view","nice"] # Up to 4 prompts
     main(video_url, user_prompts)
+    print(time.time() - start_time)
 
 
 
