@@ -1,13 +1,9 @@
 from fastapi import FastAPI, HTTPException, Depends, Request
 from fastapi.security import OAuth2PasswordBearer
 from fastapi.responses import JSONResponse
-from databases import Database
 from .celery import create_task
-import dotenv
-import os
-import asyncio
+from app.database.db import get_db
 
-dotenv.load_dotenv()
 
 from app.routes import register_routes
 import time
@@ -22,10 +18,7 @@ def get_timestamp_percentage():
 
     return min((time.time() - server.ts) * 10, 100.0)
 
-database = Database(os.getenv("POSTGRES_URL"))
-
-def get_db():
-    return database
+db = get_db()
 
 oauth2_scheme = OAuth2PasswordBearer(tokenUrl="token")
 
@@ -39,8 +32,9 @@ async def get_session_user(request: Request, token: str = Depends(oauth2_scheme)
     """
     
     try:
-        
-        result = await database.fetch_one(query=query, values={"session_token": session_token})
+        await db.connect()
+        result = await db.fetch_one(query=query, values={"session_token": session_token})
+        await db.disconnect()
         if result is None:
             raise HTTPException(status_code=401, detail="Session not found")
         return result["userId"]
@@ -66,7 +60,7 @@ def custom_openapi():
 
 server.openapi = custom_openapi
 
-EXCLUDE_PATHS = ["/docs", "/openapi.json", "/example"]
+EXCLUDE_PATHS = ["/docs", "/openapi.json"]
 
 @server.middleware("http")
 async def add_session_user(request: Request, call_next):
@@ -81,22 +75,22 @@ async def add_session_user(request: Request, call_next):
             if scheme.lower() == 'bearer':
                 user_id = await get_session_user(request, token)
             else:
-                raise HTTPException(status_code=401, detail="Invalid authorization scheme or token")
+                return JSONResponse(status_code=401, content="Invalid authorization scheme or token")
         else:
-            raise HTTPException(status_code=401, detail="Authorization header not found")
+            return JSONResponse(status_code=401, content="Authorization header not found")
     except HTTPException as e:
-        raise e
+        raise JSONResponse(status_code=e.status_code, content=e.detail)
     request.state.user_id = user_id
     response = await call_next(request)
     return response
 
 @server.on_event("shutdown")
 async def shutdown():
-    await database.disconnect()
+    await db.disconnect()
 
 @server.on_event("startup")
 async def startup():
-    await database.connect()
+    await db.connect()
 
 @server.get("/example")
 async def example_route(request: Request):
