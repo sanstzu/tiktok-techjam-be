@@ -220,7 +220,7 @@ if __name__ == "__main__":
     # calculate start time
     start_time = datetime.datetime.now()
 
-    url = "https://www.youtube.com/watch?v=hFkJJkFIA2I"
+    url = "https://www.youtube.com/watch?v=L8ECu0f9_kA"
     with ThreadPoolExecutor() as executor:
         generator = TestCaseGenerator(url, executor)
         generator.execute()

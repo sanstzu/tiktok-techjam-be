@@ -119,7 +119,7 @@ def get_caption_score(url, user_prompts):
     captions_dict = {}
 
     # Captioning
-    results = process_images_in_parallel(image_paths, api_key, prompt_text, num_threads=30, frames_per_request=3)
+    results = process_images_in_parallel(image_paths, api_key, prompt_text, user_prompts, num_threads=30, frames_per_request=3)
     for i in range(len(results)):
         try:
             caption = results[i]['choices'][0]['message']['content']
