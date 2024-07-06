@@ -1,0 +1,30 @@
+name: tiktok-techjam
+services:
+  redis:
+    image: redis:6.2-alpine
+    container_name: redis
+
+  celery_worker:
+    container_name: celery_worker
+    build: .
+    command: celery -A app.celery.celery worker --loglevel=info
+    environment:
+      - CELERY_BROKER_URL=${CELERY_BROKER_URL}
+      - CELERY_RESULT_BACKEND=${CELERY_RESULT_BACKEND}
+    depends_on:
+      - redis
+    volumes:
+      - .:/app
+
+  flower:
+    container_name: flower
+    build: .
+    command: celery -A app.celery.celery flower --port=5555
+    ports:
+      - 5556:5555
+    environment:
+      - CELERY_BROKER_URL=${CELERY_BROKER_URL}
+      - CELERY_RESULT_BACKEND=${CELERY_RESULT_BACKEND}
+    depends_on:
+      - redis
+      - celery_worker
