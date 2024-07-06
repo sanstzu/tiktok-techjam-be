@@ -44,9 +44,6 @@ async def get_session_user(request: Request, token: str = Depends(oauth2_scheme)
         await db.connect()
         result = await db.fetch_one(query=query, values={"session_token": session_token})
         await db.disconnect()
-        print("########################################")
-        print(result)
-        print("########################################")
         if result is None:
             raise HTTPException(status_code=401, detail="Session not found")
         return result["userId"]
