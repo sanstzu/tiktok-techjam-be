@@ -1,6 +1,8 @@
 from fastapi import FastAPI, HTTPException, Depends, Request
 from fastapi.security import OAuth2PasswordBearer
+from fastapi.responses import JSONResponse
 from databases import Database
+from .celery import create_task
 import dotenv
 import os
 
@@ -85,3 +87,8 @@ register_routes(server)
 @server.get("/example")
 async def example_route(request: Request):
     return {"message": "This is a protected route", "user_id": request.state.user_id}
+
+@server.post("/example/task")
+def run_task(request: Request):
+    task = create_task.delay(prompt = "Hello, world!")
+    return JSONResponse({"Response": task.get()})
