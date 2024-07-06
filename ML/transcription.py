@@ -9,9 +9,14 @@ import subprocess
 from urllib.parse import urlparse, parse_qs
 import concurrent.futures
 import numpy as np
+import json
 
 client = OpenAI(api_key=OPENAI_API_KEY)
 api_key = OPENAI_API_KEY
+
+def save_dict_to_json(data, file_path):
+    with open(file_path, 'w') as json_file:
+        json.dump(data, json_file, indent=4)
 
 def transcribe(audio_file_path):
     audio_file = open(audio_file_path, "rb")
@@ -126,6 +131,8 @@ def get_transcription_score(url, user_prompts):
     embedding_model = 'text-embedding-3-small'
     transcription_dict = get_transcription_dict(url)
     n = len(transcription_dict)
+
+    save_dict_to_json(transcription_dict, './results/transcriptions.json')
 
     embedded_transcriptions = process_embeddings_in_parallel(transcription_dict, embedding_model, n)
     

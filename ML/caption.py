@@ -8,6 +8,7 @@ import math
 import numpy as np
 from sklearn.metrics.pairwise import cosine_similarity
 from datetime import timedelta
+import json
 
 # Ensure the key.py file is in the same directory
 from key import OPENAI_API_KEY
@@ -15,6 +16,10 @@ from key import OPENAI_API_KEY
 # Initialize client
 api_key = OPENAI_API_KEY
 client = OpenAI(api_key=api_key)
+
+def save_dict_to_json(data, file_path):
+    with open(file_path, 'w') as json_file:
+        json.dump(data, json_file, indent=4)
 
 # Function to encode the image
 def encode_image(image_path):
@@ -126,6 +131,8 @@ def get_caption_score(url, user_prompts):
             captions_dict[seconds_to_hhmmss(i*5)] = caption
         except KeyError:
             captions_dict[seconds_to_hhmmss(i*5)] = "Missing"
+
+    save_dict_to_json(captions_dict, './results/captions.json')
 
     # Embedding
     embedding_model = 'text-embedding-3-small'

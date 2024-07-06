@@ -10,6 +10,7 @@ from transcription import get_transcription_score
 from edit_video import extract_and_concatenate_clips
 from urllib.parse import urlparse, parse_qs
 import concurrent.futures
+import json
 
 # Set up custom SSL context using certifi
 certifi_path = certifi.where()
@@ -27,6 +28,10 @@ install_opener(opener)
 MAX_PROMPT = 4
 VIDEO_DURATION = 60  # seconds
 CLIP_DURATION = 15  # seconds
+
+def save_dict_to_json(data, file_path):
+    with open(file_path, 'w') as json_file:
+        json.dump(data, json_file, indent=4)
 
 def run_functions_in_parallel(video_url, user_prompts):
     with concurrent.futures.ThreadPoolExecutor() as executor:
@@ -114,6 +119,9 @@ def main(video_url, user_prompts):
     print(f"Video path for processing: {video_path}")
 
     caption_score_dict, transcription_score_dict = run_functions_in_parallel(video_url, user_prompts)
+
+    save_dict_to_json(caption_score_dict, './results/caption_scores.json')
+    save_dict_to_json(transcription_score_dict, './results/transcription_scores.json')
 
     similarity_scores = calculate_similarity_scores(caption_score_dict, transcription_score_dict, user_prompts)
     top_timeframes = get_top_timeframes(similarity_scores, user_prompts)
