@@ -1,5 +1,5 @@
 from fastapi import HTTPException
-import app.models.videos as VideoModel
+from app.models.videos import VideoModel
 
 
 
