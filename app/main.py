@@ -3,6 +3,7 @@ from fastapi.security import OAuth2PasswordBearer
 from databases import Database
 import dotenv
 import os
+import asyncio
 
 dotenv.load_dotenv()
 
@@ -21,6 +22,9 @@ def get_timestamp_percentage():
 
 database = Database(os.getenv("POSTGRES_URL"))
 
+def get_db():
+    return database
+
 oauth2_scheme = OAuth2PasswordBearer(tokenUrl="token")
 
 async def get_session_user(request: Request, token: str = Depends(oauth2_scheme)):
@@ -33,9 +37,8 @@ async def get_session_user(request: Request, token: str = Depends(oauth2_scheme)
     """
     
     try:
-        await database.connect()
+        
         result = await database.fetch_one(query=query, values={"session_token": session_token})
-        await database.disconnect()
         if result is None:
             raise HTTPException(status_code=401, detail="Session not found")
         return result["userId"]
@@ -76,10 +79,18 @@ async def add_session_user(request: Request, call_next):
     response = await call_next(request)
     return response
 
-register_routes(server)
+@server.on_event("shutdown")
+async def shutdown():
+    await database.disconnect()
+
+@server.on_event("startup")
+async def startup():
+    await database.connect()
 
 @server.get("/example")
 async def example_route(request: Request):
     if not request.state.user_id:
         raise HTTPException(status_code=401, detail="Unauthorized")
     return {"message": "This is a protected route", "user_id": request.state.user_id}
+
+register_routes(server)
