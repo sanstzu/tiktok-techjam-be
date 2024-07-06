@@ -61,7 +61,7 @@ def make_api_request(image_paths, api_key, prompt_text, user_input):
     response = requests.post("https://api.openai.com/v1/chat/completions", headers=headers, json=payload)
     return response.json()
 
-def process_images_in_parallel(image_paths, api_key, prompt_text, user_input, num_threads=10, frames_per_request=3):
+def process_images_in_parallel(image_paths, api_key, prompt_text, user_input, num_threads=30, frames_per_request=3):
     results = []
 
     # Split image_paths into chunks of frames_per_request
