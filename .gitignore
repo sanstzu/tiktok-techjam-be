@@ -175,3 +175,6 @@ cython_debug/
 
 # Add postgres-data from docker
 postgres-data/
+download/G-mmtUxSt5k.mp4
+download/G-mmtUxSt5k.mp3
+download/*
