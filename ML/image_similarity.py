@@ -1,18 +1,19 @@
-# coding: utf-8
 import openai
 from openai import OpenAI
 import os
 import concurrent.futures
 import base64
 import requests
-from key import OPENAI_API_KEY
 import math
 import numpy as np
 from sklearn.metrics.pairwise import cosine_similarity
 from datetime import timedelta
 
+# Ensure the key.py file is in the same directory
+from key import OPENAI_API_KEY
+
 # Initialize client
-api_key=OPENAI_API_KEY
+api_key = OPENAI_API_KEY
 client = OpenAI(api_key=api_key)
 
 # Function to encode the image
@@ -28,8 +29,9 @@ def list_files(directory):
     return file_list
 
 def get_sys_prompt(file_path):
-    f = open("prompt.txt", "r")
-    prompt_text = f.read()
+    abs_path = os.path.join(os.path.dirname(os.path.abspath(__file__)), file_path)
+    with open(abs_path, "r") as f:
+        prompt_text = f.read()
     return prompt_text
 
 def make_api_request(image_paths, api_key, prompt_text, user_input):
@@ -45,7 +47,7 @@ def make_api_request(image_paths, api_key, prompt_text, user_input):
     images_payload = [{"type": "image_url", "image_url": {"url": f"data:image/jpg;base64,{img}", "detail": "low"}} for img in base64_images]
 
     payload = {
-        "model": "gpt-4o",
+        "model": "gpt-4",
         "messages": [
             {"role": "system", "content": prompt_text},
             {"role": "user", "content": [
@@ -78,7 +80,7 @@ def process_images_in_parallel(image_paths, api_key, prompt_text, user_input, nu
     return results
 
 def get_embedding(text, model):
-    return client.embeddings.create(input = [text], model=model).data[0].embedding
+    return client.embeddings.create(input=[text], model=model).data[0].embedding
 
 def process_embeddings_in_parallel(results, model, num_threads):
     def embed_result(result):
@@ -109,7 +111,6 @@ def get_similarity_score(url, prompt):
     # Get all the image paths
     directory = './frames/' + url  # When you run video.py, all the frames located inside frames folder
     image_paths = list_files(directory)
-    directory
 
     # Get User Input
     user_input = prompt
@@ -126,27 +127,4 @@ def get_similarity_score(url, prompt):
         except KeyError:
             captions_dict[seconds_to_hhmmss(i*5)] = "Missing"
 
-    # Embedding
-    # embedding_model = 'text-embedding-3-small'
-    # embedded_frame = process_embeddings_in_parallel(results, model=embedding_model, num_threads=len(results))
-    # embedded_query = get_embedding(user_input, model=embedding_model)
-    # embedded_query = np.array(embedded_query).reshape(1, -1)
-
-    # similarity_result = []
-    # for i in range(len(image_paths)):
-    #     similarity_result.append(cosine_similarity(embedded_frame[i], embedded_query))
-    # return similarity_result
-
-    # similarity_result = {}
-    # for i in range(len(results)):
-    #     try:
-    #         similarity_result[seconds_to_hhmmss(i*5)] = cosine_similarity(embedded_frame[i], embedded_query).item()
-    #     except KeyError:
-    #         similarity_result[seconds_to_hhmmss(i*5)] = 0
-            
-    # ranked_frame_dict = dict(sorted(similarity_result.items(), key=lambda x:x[1], reverse=True))
-    
-    # return similarity_result for similarity result by timeframe
-    # return captions_dict for all the captions by timeframe
-    
     return captions_dict

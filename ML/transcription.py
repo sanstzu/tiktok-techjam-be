@@ -3,26 +3,14 @@ from key import OPENAI_API_KEY
 from sklearn.feature_extraction.text import TfidfVectorizer
 from sklearn.metrics.pairwise import cosine_similarity
 from image_similarity import get_similarity_score
-from loudness import get_loudness_score
-from video import extract_youtube_id
-from datetime import datetime, timedelta
-import json
+from moviepy.editor import VideoFileClip
+from datetime import timedelta
 import os
+import json
+import subprocess
+from urllib.parse import urlparse, parse_qs
 
 client = OpenAI(api_key=OPENAI_API_KEY)
-
-# def list_files(directory):
-#     file_list = []
-#     for root, dirs, files in os.walk(directory):
-#         for file in files:
-#             file_list.append(os.path.join(root, file))
-#     return file_list
-
-# def calculate_similarity(text1, text2):
-#     vectorizer = TfidfVectorizer().fit_transform([text1, text2])
-#     vectors = vectorizer.toarray()
-#     cosine_sim = cosine_similarity(vectors)
-#     return cosine_sim[0, 1]
 
 def transcribe(audio_file_path):
     audio_file = open(audio_file_path, "rb")
@@ -32,7 +20,7 @@ def transcribe(audio_file_path):
         response_format="srt"
     )
     return transcription
-    
+
 def process_transcription(transcription):
     blocks = transcription.split('\n\n')
     processed_dict = {}
@@ -78,24 +66,36 @@ def format_transcription_dict(transcription_dict, interval=5):
 
     return formatted_transcription_dict
 
-def get_transcription_dict(url):
-    url = extract_youtube_id(url) + ".mp3"
-    audio_path = os.path.join(".", "download", url)
-    transcription = process_transcription(transcribe(audio_path))
+def extract_audio(video_path, audio_path):
+    video = VideoFileClip(video_path)
+    video.audio.write_audiofile(audio_path, codec='mp3')
 
+def extract_youtube_id(url):
+    parsed_url = urlparse(url)
+    
+    if parsed_url.hostname == 'youtu.be':
+        return parsed_url.path[1:]
+    elif parsed_url.hostname in ('www.youtube.com', 'youtube.com'):
+        if parsed_url.path == '/watch':
+            query_params = parse_qs(parsed_url.query)
+            return query_params.get('v', [None])[0]
+        elif parsed_url.path.startswith('/embed/'):
+            return parsed_url.path.split('/')[2]
+        elif parsed_url.path.startswith('/v/'):
+            return parsed_url.path.split('/')[2]
+    return None
+
+def get_transcription_dict(url):
+    video_id = extract_youtube_id(url)
+    audio_path = os.path.join(".", "download", f"{video_id}.mp3")
+    video_path = os.path.join(".", "download", f"{video_id}.mp4")
+    
+    if not os.path.exists(audio_path):
+        extract_audio(video_path, audio_path)
+    
+    transcription = process_transcription(transcribe(audio_path))
     transcription_dict = format_transcription_dict(transcription)
     return transcription_dict
 
-# def get_transcription_score(url, prompt):
-#     video_path = os.path.join(".", "audio", extract_youtube_id(url))
-#     files = list_files(video_path)
 
-#     scores = []
 
-#     for i in files:
-#         transcription = transcribe(i)
-#         score = calculate_similarity(transcription, prompt)
-
-#         scores.append(score)
-    
-#     return scores
