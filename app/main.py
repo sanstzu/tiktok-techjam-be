@@ -1,6 +1,8 @@
 from fastapi import FastAPI, HTTPException, Depends, Request
 from fastapi.security import OAuth2PasswordBearer
+from fastapi.responses import JSONResponse
 from databases import Database
+from .celery import create_task
 import dotenv
 import os
 import asyncio
@@ -64,8 +66,13 @@ def custom_openapi():
 
 server.openapi = custom_openapi
 
+EXCLUDE_PATHS = ["/docs", "/openapi.json", "/example"]
+
 @server.middleware("http")
 async def add_session_user(request: Request, call_next):
+    if request.url.path in EXCLUDE_PATHS:
+        return await call_next(request)
+
     user_id = None
     try:
         authorization: str = request.headers.get("Authorization")
@@ -73,8 +80,12 @@ async def add_session_user(request: Request, call_next):
             scheme, _, token = authorization.partition(' ')
             if scheme.lower() == 'bearer':
                 user_id = await get_session_user(request, token)
-    except HTTPException:
-        pass
+            else:
+                raise HTTPException(status_code=401, detail="Invalid authorization scheme or token")
+        else:
+            raise HTTPException(status_code=401, detail="Authorization header not found")
+    except HTTPException as e:
+        raise e
     request.state.user_id = user_id
     response = await call_next(request)
     return response
@@ -93,4 +104,9 @@ async def example_route(request: Request):
         raise HTTPException(status_code=401, detail="Unauthorized")
     return {"message": "This is a protected route", "user_id": request.state.user_id}
 
+@server.post("/example/task")
+def run_task(request: Request):
+    task = create_task.delay(prompt = "Hello, world!")
+    return JSONResponse({"Response": task.get()})
+  
 register_routes(server)

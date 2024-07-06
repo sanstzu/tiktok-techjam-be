@@ -38,7 +38,7 @@ Copy the `.env.example` file to `.env` and fill in the required environment vari
 To run the database, use docker compose with the following command.
 
 ```shell
-docker-compose -f ./build/docker-compose.yml --env-file .env up -d
+docker compose --env-file .env up -d
 ```
 
 ### Running the Application
