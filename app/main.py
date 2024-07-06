@@ -63,8 +63,13 @@ def custom_openapi():
 
 server.openapi = custom_openapi
 
+EXCLUDE_PATHS = ["/docs", "/openapi.json", "/example"]
+
 @server.middleware("http")
 async def add_session_user(request: Request, call_next):
+    if request.url.path in EXCLUDE_PATHS:
+        return await call_next(request)
+
     user_id = None
     try:
         authorization: str = request.headers.get("Authorization")
