@@ -70,8 +70,12 @@ async def add_session_user(request: Request, call_next):
             scheme, _, token = authorization.partition(' ')
             if scheme.lower() == 'bearer':
                 user_id = await get_session_user(request, token)
-    except HTTPException:
-        pass
+            else:
+                raise HTTPException(status_code=401, detail="Invalid authorization scheme or token")
+        else:
+            raise HTTPException(status_code=401, detail="Authorization header not found")
+    except HTTPException as e:
+        raise e
     request.state.user_id = user_id
     response = await call_next(request)
     return response
@@ -80,6 +84,4 @@ register_routes(server)
 
 @server.get("/example")
 async def example_route(request: Request):
-    if not request.state.user_id:
-        raise HTTPException(status_code=401, detail="Unauthorized")
     return {"message": "This is a protected route", "user_id": request.state.user_id}
