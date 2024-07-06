@@ -9,6 +9,7 @@ from caption import get_caption_score
 from transcription import get_transcription_score
 from edit_video import extract_and_concatenate_clips
 from urllib.parse import urlparse, parse_qs
+import concurrent.futures
 
 # Set up custom SSL context using certifi
 certifi_path = certifi.where()
@@ -27,14 +28,15 @@ MAX_PROMPT = 4
 VIDEO_DURATION = 60  # seconds
 CLIP_DURATION = 15  # seconds
 
-# for key in caption_dict:
-#     weighted_scores = []
-#     for i in range(len(caption_dict[key])):
-#         weighted_score = 0.7 * caption_dict[key][i] + 0.3 * transcription_dict[key][i]
-#         weighted_scores.append(weighted_score)
-#     weighted_score_dict[key] = weighted_scores
+def run_functions_in_parallel(video_url, user_prompts):
+    with concurrent.futures.ThreadPoolExecutor() as executor:
+        future_caption = executor.submit(get_caption_score, video_url, user_prompts)
+        future_transcription = executor.submit(get_transcription_score, video_url, user_prompts)
 
-# print(weighted_score_dict)
+        caption_score_dict = future_caption.result()
+        transcription_score_dict = future_transcription.result()
+
+    return caption_score_dict, transcription_score_dict
 
 def download_video(video_url, download_path):
     ydl_opts = {
@@ -111,8 +113,7 @@ def main(video_url, user_prompts):
 
     print(f"Video path for processing: {video_path}")
 
-    caption_score_dict = get_caption_score(video_url, user_prompts)
-    transcription_score_dict = get_transcription_score(video_url, user_prompts)
+    caption_score_dict, transcription_score_dict = run_functions_in_parallel(video_url, user_prompts)
 
     similarity_scores = calculate_similarity_scores(caption_score_dict, transcription_score_dict, user_prompts)
     top_timeframes = get_top_timeframes(similarity_scores, user_prompts)
