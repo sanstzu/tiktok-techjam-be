@@ -42,3 +42,6 @@ def get_presigned_url(file_name: str, bucket_name: str):
     except Exception as e:
         print(f"Error generating presigned URL for {bucket_name}/{file_name}: {e}")
         raise e
+    
+def get_url(file_name: str, bucket_name: str):
+    return f"https://{bucket_name}.s3.ap-southeast-2.amazonaws.com/{file_name}"

@@ -8,17 +8,17 @@ from app.models.videos import VideoModel
 router = APIRouter(prefix="/highlights", tags=["highlights"])
 
 @router.post("/upload", response_model=str)
-def video_download(
+async def video_upload(
     file: UploadFile,
     prompt: List[str]
 ):
     """
     Starts task to highlight a video
     """
-    return upload_controller(file, prompt)
+    return await upload_controller(file.file, prompt)
 
 @router.get("/{id}/results", response_model=VideoModel)
-def video_upload(
+def video_result(
     id: str
 ): 
     """
@@ -29,7 +29,7 @@ def video_upload(
 
 
 @router.get("/{id}/status", response_model=str)
-def video_upload(
+def video_status(
     id: str
 ): 
     """

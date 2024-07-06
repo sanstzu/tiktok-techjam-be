@@ -2,19 +2,21 @@ from tempfile import SpooledTemporaryFile, mkstemp
 import os
 import app.utils.s3 as s3util
 import uuid
+import json
 import app.consts as consts
 from fastapi import HTTPException
 from typing import List
+import app.main as app
+import hashlib
 
 TEMP_FILE_DIR = consts.TEMP_FILE_DIR
 BUF_SIZE = consts.BUF_SIZE
 
-def upload_controller(file: SpooledTemporaryFile, prompt: List[str]):
+async def upload_controller(file: SpooledTemporaryFile, prompt: List[str]):
     if file is None:
         raise HTTPException(status_code=400, detail="file is required")
 
-    return "testid1"
-    """
+    
     file.seek(0)
 
     os.makedirs(TEMP_FILE_DIR, exist_ok=True)
@@ -39,16 +41,29 @@ def upload_controller(file: SpooledTemporaryFile, prompt: List[str]):
 
     if s3util.check_file_exists(s3_file_path, "tiktok-techjam"):
         # Cache and do not upload again
+        pass
     else:
         s3util.upload_to_bucket(tmp_file[1], s3_file_path, "tiktok-techjam")
 
-    # TODO: Add filename and id to database
-    # Possible schema videos(id, user_id, s3_video_path, s3_thumbnail_path, created_at)
+    url = s3util.get_url(s3_file_path, "tiktok-techjam")
 
     task_id = str(uuid.uuid4())
-    s3util.upload_to_bucket(tmp_file[1], s3_file_path, "tiktok-techjam")
 
-    # Send to worker (celery)
+    
+    db = app.get_db()
+    await db.execute(
+        f"""
+        INSERT INTO tasks(id, prompt, output_url, source_url) VALUES
+        (:id, :prompt, :output_url, :source_url)
+        """,
+        {
+            "id": task_id,
+            "prompt": json.dumps(prompt),
+            "output_url": "",
+            "source_url": url
+        }
+    )
+
+    # TODO: Send to worker (celery)
 
     return task_id
-    """
