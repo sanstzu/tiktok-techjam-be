@@ -4,6 +4,20 @@ services:
     image: redis:6.2-alpine
     container_name: redis
 
+  app:
+    container_name: app
+    build: .
+    command: uvicorn app.main:server --host 0.0.0.0 --port 8000 --reload
+    ports:
+      - 8000:8000
+    environment:
+      - CELERY_BROKER_URL=${CELERY_BROKER_URL}
+      - CELERY_RESULT_BACKEND=${CELERY_RESULT_BACKEND}
+    depends_on:
+      - redis
+    volumes:
+      - .:/app
+
   celery_worker:
     container_name: celery_worker
     build: .
@@ -28,3 +42,5 @@ services:
     depends_on:
       - redis
       - celery_worker
+    volumes:
+      - .:/app

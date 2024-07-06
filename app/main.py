@@ -2,7 +2,7 @@ from fastapi import FastAPI, HTTPException, Depends, Request
 from fastapi.security import OAuth2PasswordBearer
 from fastapi.responses import JSONResponse
 from databases import Database
-from celery import create_highlight_video_task
+from .celery import create_task
 import dotenv
 import os
 
@@ -90,6 +90,5 @@ async def example_route(request: Request):
 
 @server.post("/example/task")
 def run_task(request: Request):
-    prompt = str(request.body["prompt"])
-    task = create_highlight_video_task(prompt)
-    return JSONResponse(content={"task_id": task.id})
+    task = create_task.delay(prompt = "Hello, world!")
+    return JSONResponse({"Response": task.get()})
