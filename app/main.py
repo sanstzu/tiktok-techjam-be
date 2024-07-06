@@ -2,7 +2,7 @@ from fastapi import FastAPI, HTTPException, Depends, Request
 from fastapi.security import OAuth2PasswordBearer
 from fastapi.responses import JSONResponse
 from .celery import create_task
-from app.database.db import get_db
+from app.database.db import get_db, connect_db, disconnect_db
 
 
 from app.routes import register_routes
@@ -84,13 +84,13 @@ async def add_session_user(request: Request, call_next):
     response = await call_next(request)
     return response
 
-@server.on_event("shutdown")
-async def shutdown():
-    await db.disconnect()
-
 @server.on_event("startup")
 async def startup():
-    await db.connect()
+    await connect_db()
+
+@server.on_event("shutdown")
+async def shutdown():
+    await disconnect_db()
 
 @server.get("/example")
 async def example_route(request: Request):
@@ -102,5 +102,6 @@ async def example_route(request: Request):
 def run_task(request: Request):
     task = create_task.delay(prompt = "Hello, world!")
     return JSONResponse({"Response": task.get()})
-  
+
 register_routes(server)
+  

@@ -1,41 +1,23 @@
-from app.models.user import User
-from pydantic import BaseModel
-import datetime
-from app.models.videos import VideoModel
+from app.schemas.videos import VideoResponse
 from typing import List
-from fastapi.encoders import jsonable_encoder
-from fastapi.responses import JSONResponse
+from fastapi import HTTPException
+from app.database.db import get_db
 
-def get_videos_controller(user: str | None):
-    sample_video_1 = VideoModel(
-        id="1",
-        username="user1",
-        caption="caption1",
-        music="Adele - Hello",
-        videoUrl="https://tiktok-techjam.s3.ap-southeast-2.amazonaws.com/videos/sample-video-1.mp4",
-        userId="user1"
-    )
+db = get_db()
 
-    sample_video_2 = VideoModel(
-        id="2",
-        username="user1",
-        caption="English or Spanish",
-        music=None,
-        videoUrl="https://tiktok-techjam.s3.ap-southeast-2.amazonaws.com/videos/sample-video-2.mp4",
-        userId="user1"
-    )
-
-    sample_video_3 = VideoModel(
-        id="3",
-        username="user2",
-        caption="Spelling Bee Contest Championship",
-        music=None,
-        videoUrl="https://tiktok-techjam.s3.ap-southeast-2.amazonaws.com/videos/sample-video-3.mp4",
-        userId="user2"
-    )
-    if user is None:
-        # TODO: query all videos from the database
-        return [sample_video_1, sample_video_2, sample_video_3]
-    else:
-        # TODO: query all videos for a user id
-        return [sample_video_1]
+async def get_user_videos_controller(user_id: str) -> List[VideoResponse]:
+    query = """
+    SELECT video.id, video.caption, video.music, video."videoUrl", "user"."name"
+    FROM video
+    JOIN "user" ON video."userId" = "user".id
+    WHERE video."userId" = :user_id
+    LIMIT 50
+    """
+    try:
+        await db.connect()
+        result = await db.fetch_all(query=query, values={"user_id": user_id})
+        await db.disconnect()
+        videos = [VideoResponse(**video) for video in result]
+        return videos
+    except Exception as e:
+        raise HTTPException(status_code=500, detail="Internal server error: " + str(e))
