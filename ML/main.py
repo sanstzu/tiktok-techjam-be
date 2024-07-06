@@ -129,7 +129,7 @@ def main(video_url, user_prompts):
 if __name__ == "__main__":
     import time
     start_time = time.time()
-    video_url = "https://www.youtube.com/watch?v=hFkJJkFIA2I"
+    video_url = "https://www.youtube.com/watch?v=hFkJJkFIA2I" # change link
     user_prompts = ["deception", "smash", "lob", "great rally"] # Up to 4 prompts
     main(video_url, user_prompts)
     print(time.time() - start_time)

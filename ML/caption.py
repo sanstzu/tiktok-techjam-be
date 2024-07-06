@@ -82,14 +82,11 @@ def process_images_in_parallel(image_paths, api_key, prompt_text, user_input, nu
 def get_embedding(text, model):
     return client.embeddings.create(input=[text], model=model).data[0].embedding
 
-def process_embeddings_in_parallel(results, model, num_threads):
-    def embed_result(result):
-        return get_embedding(result['choices'][0]['message']['content'], model=model)
-    
+def process_embeddings_in_parallel(captions_dict, model, num_threads):
     embedded_frame = {}
 
     with concurrent.futures.ThreadPoolExecutor(max_workers=num_threads) as executor:
-        future_to_index = {executor.submit(embed_result, result): i for i, result in enumerate(results)}
+        future_to_index = {executor.submit(get_embedding, text, model): i for i, text in captions_dict.items()}
         for future in concurrent.futures.as_completed(future_to_index):
             i = future_to_index[future]
             try:
@@ -126,10 +123,11 @@ def get_caption_score(url, user_prompts):
             captions_dict[seconds_to_hhmmss(i*5)] = caption
         except KeyError:
             captions_dict[seconds_to_hhmmss(i*5)] = "Missing"
+    n = len(captions_dict)
 
     # Embedding
     embedding_model = 'text-embedding-3-small'
-    embedded_captions = process_embeddings_in_parallel(results, model=embedding_model, num_threads=len(results))
+    embedded_captions = process_embeddings_in_parallel(captions_dict, model=embedding_model, num_threads=n)
     
     embedded_queries = []
     for user_input in user_inputs:
