@@ -179,3 +179,6 @@ postgres-data/
 download/G-mmtUxSt5k.mp4
 download/G-mmtUxSt5k.mp3
 download/*
+tmp/*
+audio/*
+frames/*

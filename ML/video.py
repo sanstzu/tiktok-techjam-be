@@ -1,10 +1,11 @@
-from pytube import YouTube
 import os
 import re
 import cv2
 import datetime
 import sys
+import shutil
 import subprocess
+from pytube import YouTube
 from concurrent.futures import ThreadPoolExecutor
 
 # Constants
@@ -54,7 +55,7 @@ class TestCaseGenerator:
         merged_path = self.__merge_video_audio(output[0], output[1])
         folder_path = self.__split_video(merged_path)
         self.__extract_frames(folder_path)
-        self.__extract_audio(folder_path)
+        self.__extract_audio(output[1])
 
 
     def __download(self):
@@ -67,7 +68,7 @@ class TestCaseGenerator:
         yt = YouTube(self.url)
 
         if not os.path.exists(output_path):
-            yt_stream =  yt.streams.filter(file_extension='mp4', type="video", resolution="480p").order_by('resolution').desc().first()
+            yt_stream = yt.streams.filter(file_extension='mp4', type="video", resolution="480p").order_by('resolution').desc().first()
             if yt_stream == None:
                 yt_stream = yt.streams.filter(file_extension='mp4', type="video").order_by('resolution').desc().first()
             yt_stream.download(download_output, filename=f"{id}.mp4")
@@ -100,7 +101,7 @@ class TestCaseGenerator:
             output_video
         ]
 
-        os.system(" ".join(cmd))
+        subprocess.run(cmd)
 
         return output_video
     
@@ -127,7 +128,7 @@ class TestCaseGenerator:
             os.path.join(output_folder, "%03d.mp4")
         ]
 
-        os.system(" ".join(cmd))
+        subprocess.run(cmd)
 
         return output_folder
     
@@ -154,7 +155,7 @@ class TestCaseGenerator:
             if self.executor != None:
                 self.executor.submit(run_command, cmd)
             else:
-                os.system(" ".join(cmd))
+                subprocess.run(cmd)
 
 
         def get_frames(clip):
@@ -168,7 +169,7 @@ class TestCaseGenerator:
                 os.path.join(clips_path, clip)
             ]
 
-            no_of_frames = int(os.popen(" ".join(frames_cmd)).read().strip())
+            no_of_frames = int(subprocess.run(frames_cmd, capture_output=True, text=True).stdout.strip())
             clip_name = os.path.splitext(os.path.basename(clip))[0]
 
             for i in range(total_frames_per_clip):
@@ -180,41 +181,14 @@ class TestCaseGenerator:
             get_frames(clip)
             
 
-    def __extract_audio(self, clips_path):
+    def __extract_audio(self, audio_path):
         # Extract the audio
         # ffmpeg -i "$clip" -q:a 0 -map a "./audio/${id}/$(basename "$clip" .mp4).mp3"
-        output_folder = os.path.join(audio_output, extract_youtube_id(self.url))
+        output_folder = os.path.join(audio_output)
         if os.path.exists(output_folder) == False:
             os.mkdir(output_folder)
 
-        clips = file_list(clips_path)
-        
-
-        def get_audio(clip):
-            clip_path = os.path.join(clips_path, clip)
-            clip_name = os.path.splitext(os.path.basename(clip))[0]
-            output_path = os.path.join(output_folder, f"{clip_name}.mp3")
-            cmd = [
-                "ffmpeg", 
-                "-y", 
-                "-i", clip_path, 
-                "-q:a", "0", 
-                "-map", "a", 
-                output_path
-            ]
-
-            if self.executor != None:
-                self.executor.submit(run_command, cmd)
-            else:
-                os.system(" ".join(cmd))
-        
-        for clip in clips:
-            get_audio(clip)
-            
-
-
-
-    
+        shutil.copyfile(audio_path, os.path.join(output_folder, f"{extract_youtube_id(self.url)}.mp3"))
 
 if __name__ == "__main__":
     # calculate start time
@@ -229,6 +203,10 @@ if __name__ == "__main__":
     end_time = datetime.datetime.now()
 
     print(f"Time taken: {end_time - start_time}")
+
+
+
+
 
     
     
