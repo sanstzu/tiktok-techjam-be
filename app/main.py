@@ -1,13 +1,9 @@
 from fastapi import FastAPI, HTTPException, Depends, Request
 from fastapi.security import OAuth2PasswordBearer
 from fastapi.responses import JSONResponse
-from databases import Database
 from .celery import create_task
-import dotenv
-import os
-import asyncio
+from app.database.db import get_db
 
-dotenv.load_dotenv()
 
 from app.routes import register_routes
 import time
@@ -22,10 +18,7 @@ def get_timestamp_percentage():
 
     return min((time.time() - server.ts) * 10, 100.0)
 
-database = Database(os.getenv("POSTGRES_URL"))
-
-def get_db():
-    return database
+db = get_db()
 
 oauth2_scheme = OAuth2PasswordBearer(tokenUrl="token")
 
@@ -39,8 +32,6 @@ async def get_session_user(request: Request, token: str = Depends(oauth2_scheme)
     """
     
     try:
-        
-        db = get_db()
         await db.connect()
         result = await db.fetch_one(query=query, values={"session_token": session_token})
         await db.disconnect()
@@ -95,11 +86,11 @@ async def add_session_user(request: Request, call_next):
 
 @server.on_event("shutdown")
 async def shutdown():
-    await database.disconnect()
+    await db.disconnect()
 
 @server.on_event("startup")
 async def startup():
-    await database.connect()
+    await db.connect()
 
 @server.get("/example")
 async def example_route(request: Request):
