@@ -5,7 +5,6 @@ from fastapi.middleware.cors import CORSMiddleware
 from .celery import create_task
 from app.database.db import connect_db, disconnect_db, get_db
 from app.routes import register_routes
-from .celery import create_task
 import time
 from contextlib import asynccontextmanager
 
