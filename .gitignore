@@ -182,3 +182,4 @@ download/*
 tmp/*
 audio/*
 frames/*
+results/*
