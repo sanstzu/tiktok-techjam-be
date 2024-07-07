@@ -8,6 +8,7 @@ from fastapi import HTTPException
 from typing import List
 import app.main as app
 import hashlib
+from app.celery import generate_highlights
 
 TEMP_FILE_DIR = consts.TEMP_FILE_DIR
 BUF_SIZE = consts.BUF_SIZE
@@ -66,6 +67,8 @@ async def upload_controller(file: SpooledTemporaryFile, prompt: List[str], user_
         )
 
         # TODO: Send to worker (celery)
+        generate_highlights.delay(task_id, s3_file_path, prompt)
+
 
         return task_id
 

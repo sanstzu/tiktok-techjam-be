@@ -25,10 +25,15 @@ services:
     environment:
       - CELERY_BROKER_URL=${CELERY_BROKER_URL}
       - CELERY_RESULT_BACKEND=${CELERY_RESULT_BACKEND}
+      - POSTGRES_URL=${POSTGRES_URL}
     depends_on:
       - redis
     volumes:
       - .:/app
+      - ./cache:/app/cache
+      - ./tmp:/app/tmp
+      - ./frames:/app/frames
+      - ./audio:/app/audio
 
   flower:
     container_name: flower
