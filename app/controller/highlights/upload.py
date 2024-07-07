@@ -51,6 +51,7 @@ async def upload_controller(file: SpooledTemporaryFile, prompt: List[str]):
 
     
     db = app.get_db()
+    await db.connect()
     await db.execute(
         f"""
         INSERT INTO tasks(id, prompt, output_url, source_url) VALUES
@@ -63,6 +64,7 @@ async def upload_controller(file: SpooledTemporaryFile, prompt: List[str]):
             "source_url": url
         }
     )
+    await db.disconnect()
 
     # TODO: Send to worker (celery)
 
