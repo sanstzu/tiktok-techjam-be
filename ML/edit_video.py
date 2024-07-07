@@ -35,11 +35,56 @@ def merge_intervals(timeframes):
 
     return merged_intervals
 
+import cv2
+
+def concatenate_videos(new_video_path, *videos):
+    if not videos:
+        raise ValueError("No videos provided for concatenation")
+
+    # Check if the video paths are valid and are strings
+    video_paths = [v for v in videos if isinstance(v, (str, os.PathLike))]
+
+    if not video_paths:
+        raise ValueError("No valid video paths provided")
+
+    # Open the first video to get the FPS and resolution
+    first_video = cv2.VideoCapture(video_paths[0])
+    if not first_video.isOpened():
+        raise ValueError(f"Could not open the video file: {video_paths[0]}")
+    
+    # Get the FPS and resolution from the first video
+    fps = first_video.get(cv2.CAP_PROP_FPS)
+    width = int(first_video.get(cv2.CAP_PROP_FRAME_WIDTH))
+    height = int(first_video.get(cv2.CAP_PROP_FRAME_HEIGHT))
+    resolution = (width, height)
+    first_video.release()  # Release the first video as we are done with it
+
+    # Create the VideoWriter object
+    video_writer = cv2.VideoWriter(new_video_path, cv2.VideoWriter_fourcc(*"mp4v"), fps, resolution)
+
+    # Concatenate the videos
+    for v in video_paths:
+        curr_v = cv2.VideoCapture(v)
+        if not curr_v.isOpened():
+            print(f"Could not open the video file: {v}")
+            continue
+
+        while curr_v.isOpened():
+            r, frame = curr_v.read()
+            if not r:
+                break
+            video_writer.write(frame)
+
+        curr_v.release()
+
+    video_writer.release()
+
 def extract_and_concatenate_clips(video_path, timeframes, output_path):
     merged_intervals = merge_intervals(timeframes)
     
     # Parse the timeframes
     clips = []
+    clips_path = []
     for start_seconds, end_seconds in merged_intervals:
         # Extract the subclip
         temp = f"temp_{os.path.basename(video_path)}_{start_seconds}_{end_seconds}.mp4"
@@ -47,15 +92,18 @@ def extract_and_concatenate_clips(video_path, timeframes, output_path):
         ffmpeg_extract_subclip(video_path, start_seconds, end_seconds, targetname=temp_clip_path)
         clip = VideoFileClip(temp_clip_path)
         clips.append(clip)
+        
+        clips_path.append(temp_clip_path)
     
-    # Concatenate the clips
-    final_clip = concatenate_videoclips(clips)
-    
-    # Write the final video
-    final_clip.write_videofile(output_path, codec="libx264")
+    # # Concatenate the clips
+    # final_clip = concatenate_videoclips(clips)
 
-    ffmpeg_command = f"ffmpeg -i {output_path} -c:v libx264 {output_path}"
-    os.system(ffmpeg_command)
+    # # Write the final video
+    # final_clip.write_videofile(output_path, codec="libx264")
+
+    # ffmpeg_command = f"ffmpeg -i {output_path} -c:v libx264 {output_path}"
+    # os.system(ffmpeg_command)
+    concatenate_videos(output_path, *clips_path)
 
 # # Example usage
 # video_path = "./download/Gl7m0cVa37k.mp4"
