@@ -1,6 +1,6 @@
 from fastapi import HTTPException
 from fastapi.responses import JSONResponse
-from app.schemas.videos import VideoResponse
+from app.schemas.highlights import HighlightsResultResponse
 from app.database.db import get_db
 
 db = get_db()
@@ -22,3 +22,22 @@ async def get_results_controller(task_id: str) -> JSONResponse:
         return JSONResponse(content={"id": result["id"], "output_url": result["output_url"]})
     except Exception as e:
         raise HTTPException(status_code=500, detail="Internal server error: " + str(e))
+    
+
+
+async def edit_video_controller(task_id: str, edit_request: HighlightsResultResponse):
+    if not task_id:
+        raise HTTPException(status_code=400, detail="task_id is required")
+    
+    # query = """
+    # INSERT VALUES INTO video (videoUrl, caption, music)
+
+    # """
+    
+    # try:
+    #     await db.connect()
+    #     await db.execute(query=query, values={"task_id": task_id, "caption": edit_request.caption, "music": edit_request.music})
+    #     await db.disconnect()
+    #     return "Video metadata updated"
+    # except Exception as e:
+    #     raise HTTPException(status_code=500, detail="Internal server error: " + str(e))
