@@ -78,7 +78,7 @@ async def add_session_user(request: Request, call_next):
         else:
             return JSONResponse(status_code=401, content="Authorization header not found")
     except HTTPException as e:
-        raise JSONResponse(status_code=e.status_code, content=e.detail)
+        return JSONResponse(status_code=e.status_code, content=e.detail)
     request.state.user_id = user_id
     response = await call_next(request)
     return response
