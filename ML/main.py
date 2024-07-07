@@ -10,7 +10,9 @@ from transcription import get_transcription_score
 from edit_video import extract_and_concatenate_clips
 from urllib.parse import urlparse, parse_qs
 import concurrent.futures
+from concurrent.futures import ThreadPoolExecutor
 import json
+from video import TestCaseGenerator
 
 # Set up custom SSL context using certifi
 certifi_path = certifi.where()
@@ -43,17 +45,22 @@ def run_functions_in_parallel(video_url, user_prompts):
 
     return caption_score_dict, transcription_score_dict
 
-def download_video(video_url, download_path):
-    ydl_opts = {
-        'format': 'best',
-        'outtmpl': os.path.join(download_path, '%(id)s.%(ext)s'),
-    }
-    with youtube_dl.YoutubeDL(ydl_opts) as ydl:
-        info_dict = ydl.extract_info(video_url, download=True)
-        video_id = info_dict.get("id", None)
-        file_path = os.path.join(download_path, f"{video_id}.mp4")
-        print(f"Video downloaded to {file_path}")
-        return file_path
+def download_video(video_url):
+    with ThreadPoolExecutor() as executor:
+        generator = TestCaseGenerator(video_url, executor)
+        generator.execute()
+
+# def download_video(video_url, download_path):
+#     ydl_opts = {
+#         'format': 'best',
+#         'outtmpl': os.path.join(download_path, '%(id)s.%(ext)s'),
+#     }
+#     with youtube_dl.YoutubeDL(ydl_opts) as ydl:
+#         info_dict = ydl.extract_info(video_url, download=True)
+#         video_id = info_dict.get("id", None)
+#         file_path = os.path.join(download_path, f"{video_id}.mp4")
+#         print(f"Video downloaded to {file_path}")
+#         return file_path
 
 def calculate_similarity_scores(caption_score_dict, transcription_score_dict, user_prompts):
     similarity_scores = {}
@@ -114,15 +121,12 @@ def extract_youtube_id(url):
 def main(video_url, user_prompts):
     download_path = './download'
     os.makedirs(download_path, exist_ok=True)
-    video_path = download_video(video_url, download_path)
+    # download_video(video_url)
+    video_path = "./download/" + "eLJ5MoSPjVE.mp4"
 
     print(f"Video path for processing: {video_path}")
 
     caption_score_dict, transcription_score_dict = run_functions_in_parallel(video_url, user_prompts)
-
-    save_dict_to_json(caption_score_dict, './results/caption_scores.json')
-    save_dict_to_json(transcription_score_dict, './results/transcription_scores.json')
-
     similarity_scores = calculate_similarity_scores(caption_score_dict, transcription_score_dict, user_prompts)
     top_timeframes = get_top_timeframes(similarity_scores, user_prompts)
     final_timeframes = generate_timeframes_for_editing(top_timeframes)
@@ -137,8 +141,8 @@ def main(video_url, user_prompts):
 if __name__ == "__main__":
     import time
     start_time = time.time()
-    video_url = "https://www.youtube.com/watch?v=hFkJJkFIA2I" # change link
-    user_prompts = ["deception", "smash", "lob", "great rally"] # Up to 4 prompts
+    video_url = "https://youtu.be/eLJ5MoSPjVE?feature=shared" # change link
+    user_prompts = ["header goal", "freekick goal", "ronaldo celebration", "sliding tackle"] # Up to 4 prompts
     main(video_url, user_prompts)
     print(time.time() - start_time)
 

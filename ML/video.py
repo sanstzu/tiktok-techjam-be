@@ -112,7 +112,6 @@ class TestCaseGenerator:
 
          # Split the video into 5-second clips
         # ffmpeg -i "$input_file" -c copy -map 0 -segment_time 5 -f segment -reset_timestamps 1 "./tmp/clips/${id}/%03d.mp4"
-
         cmd = [
             "ffmpeg", 
             "-y", 
@@ -194,7 +193,7 @@ if __name__ == "__main__":
     # calculate start time
     start_time = datetime.datetime.now()
 
-    url = "https://www.youtube.com/watch?v=L8ECu0f9_kA"
+    url = "https://youtube.com/watch?v=eLJ5MoSPjVE"
     with ThreadPoolExecutor() as executor:
         generator = TestCaseGenerator(url, executor)
         generator.execute()
@@ -203,13 +202,3 @@ if __name__ == "__main__":
     end_time = datetime.datetime.now()
 
     print(f"Time taken: {end_time - start_time}")
-
-
-
-
-
-    
-    
-        
-        
-    

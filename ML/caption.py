@@ -9,6 +9,7 @@ import numpy as np
 from sklearn.metrics.pairwise import cosine_similarity
 from datetime import timedelta
 import json
+from video import extract_youtube_id
 
 # Ensure the key.py file is in the same directory
 from key import OPENAI_API_KEY
@@ -105,8 +106,6 @@ def process_embeddings_in_parallel(captions_dict, model, num_threads):
 def seconds_to_hhmmss(seconds):
     return str(timedelta(seconds=seconds))
 
-# Get url name
-from video import extract_youtube_id
 def get_caption_score(url, user_prompts):
     url = extract_youtube_id(url)
 
@@ -128,13 +127,12 @@ def get_caption_score(url, user_prompts):
             captions_dict[seconds_to_hhmmss(i*5)] = caption
         except KeyError:
             captions_dict[seconds_to_hhmmss(i*5)] = "Missing"
-    n = len(captions_dict)
-
-    save_dict_to_json(captions_dict, './results/captions.json')
+    n = len(results)
 
     # Embedding
     embedding_model = 'text-embedding-3-small'
     embedded_captions = process_embeddings_in_parallel(captions_dict, model=embedding_model, num_threads=n)
+    # save_dict_to_json(embedded_captions, './results/embedded_captions.json')
     
     embedded_queries = []
     for user_input in user_inputs:
@@ -151,11 +149,3 @@ def get_caption_score(url, user_prompts):
     
     return similarity_result
 
-# for key in caption_dict:
-#     weighted_scores = []
-#     for i in range(len(caption_dict[key])):
-#         weighted_score = 0.7 * caption_dict[key][i] + 0.3 * transcription_dict[key][i]
-#         weighted_scores.append(weighted_score)
-#     weighted_score_dict[key] = weighted_scores
-
-# print(weighted_score_dict)

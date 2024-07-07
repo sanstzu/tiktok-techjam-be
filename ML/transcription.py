@@ -132,9 +132,8 @@ def get_transcription_score(url, user_prompts):
     transcription_dict = get_transcription_dict(url)
     n = len(transcription_dict)
 
-    save_dict_to_json(transcription_dict, './results/transcriptions.json')
-
     embedded_transcriptions = process_embeddings_in_parallel(transcription_dict, embedding_model, n)
+    # save_dict_to_json(embedded_transcriptions, './results/embedded_transcriptions.json')
     
     embedded_queries = []
     for user_input in user_inputs:
