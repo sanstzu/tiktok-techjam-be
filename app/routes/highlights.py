@@ -1,4 +1,4 @@
-from fastapi import APIRouter, UploadFile, HTTPException
+from fastapi import APIRouter, UploadFile, Request
 from fastapi.responses import JSONResponse
 from app.controller.highlights.results import get_results_controller, edit_video_controller
 from app.controller.highlights.upload import upload_controller 
@@ -27,13 +27,15 @@ async def get_video_result(task_id: str):
 
 @router.post("/{task_id}/edit", response_model=str)
 async def edit_video(
+    request: Request,  
     task_id: str,
     edit_request: HighlightsEditRequest
 ): 
     """
     Edit a video's metadata
     """
-    return await edit_video_controller(task_id, edit_request)
+    user_id = request.state.user_id
+    return await edit_video_controller(task_id, edit_request, user_id)
 
 
 @router.get("/{id}/status", response_model=str)
@@ -43,5 +45,4 @@ def video_status(
     """
     Get highlight status, to check progress
     """
-
     return get_status_controller(id)
