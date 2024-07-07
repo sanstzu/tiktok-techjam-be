@@ -4,7 +4,7 @@ class HighlightsResultResponse(BaseModel):
     id: str
     output_url: str
 
-class HighlightsEditRequest(BaseModel):
+class HighlightsPostRequest(BaseModel):
     video_url: str
     music: str
     caption: str

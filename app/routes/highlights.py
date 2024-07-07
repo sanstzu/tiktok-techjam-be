@@ -1,10 +1,9 @@
 from fastapi import APIRouter, UploadFile, Request
-from fastapi.responses import JSONResponse
-from app.controller.highlights.results import get_results_controller, edit_video_controller
+from app.controller.highlights.results import get_results_controller, post_video_controller
 from app.controller.highlights.upload import upload_controller 
 from app.controller.highlights.status import get_status_controller
 from typing import List
-from app.schemas.highlights import HighlightsResultResponse, HighlightsEditRequest
+from app.schemas.highlights import HighlightsResultResponse, HighlightsPostRequest
 
 router = APIRouter(prefix="/highlights", tags=["highlights"])
 
@@ -25,17 +24,16 @@ async def get_video_result(task_id: str):
     """
     return await get_results_controller(task_id)
 
-@router.post("/{task_id}/edit", response_model=str)
-async def edit_video(
+@router.post("/post", response_model=str)
+async def post_video(
     request: Request,  
-    task_id: str,
-    edit_request: HighlightsEditRequest
+    post_request: HighlightsPostRequest
 ): 
     """
-    Edit a video's metadata
+    Post a video's metadata
     """
     user_id = request.state.user_id
-    return await edit_video_controller(task_id, edit_request, user_id)
+    return await post_video_controller(post_request, user_id)
 
 
 @router.get("/{id}/status", response_model=str)
