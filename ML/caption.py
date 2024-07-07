@@ -52,7 +52,7 @@ def make_api_request(image_paths, api_key, prompt_text, user_input):
     images_payload = [{"type": "image_url", "image_url": {"url": f"data:image/jpg;base64,{img}", "detail": "low"}} for img in base64_images]
 
     payload = {
-        "model": "gpt-4",
+        "model": "gpt-4o",
         "messages": [
             {"role": "system", "content": prompt_text},
             {"role": "user", "content": [
