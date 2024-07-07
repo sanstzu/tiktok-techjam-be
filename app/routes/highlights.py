@@ -26,16 +26,17 @@ async def get_video_result(task_id: str):
     """
     return await get_results_controller(task_id)
 
-@router.post("/post", response_model=str)
+@router.post("/{task_id}/post", response_model=str)
 async def post_video(
     request: Request,  
-    post_request: HighlightsPostRequest
+    post_request: HighlightsPostRequest,
+    task_id: str
 ): 
     """
     Post a video's metadata
     """
     user_id = request.state.user_id
-    return await post_video_controller(post_request, user_id)
+    return await post_video_controller(post_request, task_id, user_id)
 
 
 @router.get("/{id}/status", response_model=str)
