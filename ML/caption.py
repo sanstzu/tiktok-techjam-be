@@ -8,10 +8,12 @@ import numpy as np
 from sklearn.metrics.pairwise import cosine_similarity
 from datetime import timedelta
 import json
-from video import extract_youtube_id
+import dotenv
+import ML.utils as utils
 
 # Ensure the key.py file is in the same directory
-from key import OPENAI_API_KEY
+dotenv.load_dotenv()
+OPENAI_API_KEY = os.getenv("OPENAI_API_KEY")
 
 # Initialize client
 api_key = OPENAI_API_KEY
@@ -108,36 +110,44 @@ def process_embeddings_in_parallel(captions_dict, model, num_threads):
 def seconds_to_hhmmss(seconds):
     return str(timedelta(seconds=seconds))
 
-def get_caption_score(url, user_prompts):
-    url = extract_youtube_id(url)
 
+def get_caption_score(url, user_prompts):
+    id = utils.get_sha256(url)
     # Get all the image paths
-    directory = './frames/' + url  # When you run video.py, all the frames located inside frames folder
+    directory = './frames/' + id  # When you run video.py, all the frames located inside frames folder
     image_paths = list_files(directory)
 
     # Get User Input
     user_prompt = " ".join(user_prompts)
     prompt_text = get_sys_prompt('prompt.txt')
     results = []
-    captions_dict = {}
-
-    # Captioning
-    results = process_images_in_parallel(image_paths, api_key, prompt_text, user_prompt, num_threads=30, frames_per_request=3)
-    for i in range(len(results)):
-        try:
-            caption = results[i]['choices'][0]['message']['content']
-            captions_dict[seconds_to_hhmmss(i*5)] = caption
-        except KeyError:
-            captions_dict[seconds_to_hhmmss(i*5)] = "Missing"
-    n = len(results)
-
-    # Embedding
-    embedding_model = 'text-embedding-3-small'
-    embedded_captions = process_embeddings_in_parallel(captions_dict, model=embedding_model, num_threads=n)
-    
     embedded_queries = []
+    embedded_captions = []
+    embedding_model = 'text-embedding-3-small'
     for user_input in user_prompts:
         embedded_queries.append(np.array(get_embedding(user_input, model=embedding_model)).reshape(1, -1))
+
+    captions_dict = {}
+
+    if utils.is_embedding_cached(url):
+        print("Using cached captions")
+        captions_dict = utils.get_dict_from_json(utils.get_embedding_file_path(url)[0])
+    else: 
+        results = process_images_in_parallel(image_paths, api_key, prompt_text, user_prompt, num_threads=30, frames_per_request=3)
+        for i in range(len(results)):
+            try:
+                caption = results[i]['choices'][0]['message']['content']
+                captions_dict[seconds_to_hhmmss(i*5)] = caption
+            except KeyError:
+                captions_dict[seconds_to_hhmmss(i*5)] = "Missing"
+        n = len(results)
+        
+        utils.save_dict_to_json(captions_dict, utils.get_embedding_file_path(url)[0])
+    
+    n = len(captions_dict)
+    # Embedding
+    embedded_captions = process_embeddings_in_parallel(captions_dict, model=embedding_model, num_threads=n)
+    
 
     similarity_result = {}
 
@@ -148,6 +158,7 @@ def get_caption_score(url, user_prompts):
             scores.append(score)
         similarity_result[timeframe] = scores
     
+    print("caption done")
     return similarity_result
 
 

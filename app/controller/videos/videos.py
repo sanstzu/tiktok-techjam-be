@@ -39,6 +39,7 @@ async def get_user_videos_controller(user_id: str) -> List[VideoResponse]:
     FROM video
     JOIN "user" ON video."userId" = "user".id
     WHERE video."userId" = :user_id
+    ORDER BY video."postTime" DESC
     LIMIT 50
     """
     try:

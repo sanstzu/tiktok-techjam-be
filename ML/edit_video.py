@@ -1,6 +1,7 @@
 from moviepy.video.io.ffmpeg_tools import ffmpeg_extract_subclip
 from moviepy.editor import concatenate_videoclips, VideoFileClip
 import os
+import uuid
 
 output_dir = os.path.join(".", "output")
 if not os.path.exists(output_dir):
@@ -100,10 +101,15 @@ def extract_and_concatenate_clips(video_path, timeframes, output_path):
 
     # # Write the final video
     # final_clip.write_videofile(output_path, codec="libx264")
-
     # ffmpeg_command = f"ffmpeg -i {output_path} -c:v libx264 {output_path}"
     # os.system(ffmpeg_command)
     concatenate_videos(output_path, *clips_path)
+
+     # remove the old file
+    os.remove(output_path)
+
+    # rename the tmp file
+    os.rename(tmp_path, output_path)
 
 # # Example usage
 # video_path = "./download/Gl7m0cVa37k.mp4"

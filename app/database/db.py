@@ -7,6 +7,7 @@ dotenv.load_dotenv()
 database = Database(os.getenv("POSTGRES_URL"))
 
 async def connect_db():
+    print("connect db called")
     await database.connect()
 
 async def disconnect_db():
