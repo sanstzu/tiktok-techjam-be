@@ -54,6 +54,7 @@ def extract_and_concatenate_clips(video_path, timeframes, output_path):
     # Write the final video
     final_clip.write_videofile(output_path, codec="libx264")
 
+
 # # Example usage
 # video_path = "./download/Gl7m0cVa37k.mp4"
 # video_id = os.path.splitext(os.path.basename(video_path))[0]

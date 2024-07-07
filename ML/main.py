@@ -1,16 +1,12 @@
 import os
-import sys
 import certifi
 import ssl
 import yt_dlp as youtube_dl
-import numpy as np
-from sklearn.metrics.pairwise import cosine_similarity
 from caption import get_caption_score
 from transcription import get_transcription_score
 from edit_video import extract_and_concatenate_clips
 from urllib.parse import urlparse, parse_qs
 import concurrent.futures
-from concurrent.futures import ThreadPoolExecutor
 import json
 from video import TestCaseGenerator
 
@@ -46,33 +42,25 @@ def run_functions_in_parallel(video_url, user_prompts):
     return caption_score_dict, transcription_score_dict
 
 def download_video(video_url):
-    with ThreadPoolExecutor() as executor:
+    with concurrent.futures.ThreadPoolExecutor() as executor:
         generator = TestCaseGenerator(video_url, executor)
         generator.execute()
 
-# def download_video(video_url, download_path):
-#     ydl_opts = {
-#         'format': 'best',
-#         'outtmpl': os.path.join(download_path, '%(id)s.%(ext)s'),
-#     }
-#     with youtube_dl.YoutubeDL(ydl_opts) as ydl:
-#         info_dict = ydl.extract_info(video_url, download=True)
-#         video_id = info_dict.get("id", None)
-#         file_path = os.path.join(download_path, f"{video_id}.mp4")
-#         print(f"Video downloaded to {file_path}")
-#         return file_path
-
 def calculate_similarity_scores(caption_score_dict, transcription_score_dict, user_prompts):
+    print("Caption Score Keys:", caption_score_dict.keys())
+    print("Transcription Score Keys:", transcription_score_dict.keys())
+
     similarity_scores = {}
     for key in caption_score_dict:
         weighted_scores = []
         for i in range(len(caption_score_dict[key])):
-            weighted_score = 0.7 * caption_score_dict[key][i] + 0.3 * transcription_score_dict[key][i]
+            caption_score = caption_score_dict[key][i]
+            transcription_score = transcription_score_dict.get(key, [0]*len(caption_score_dict[key]))[i]  # Default to 0 if key is missing
+            weighted_score = 0.7 * caption_score + 0.3 * transcription_score
             weighted_scores.append(weighted_score)
         similarity_scores[key] = weighted_scores
 
-    print(similarity_scores)
-
+    print("Similarity Scores:", similarity_scores)
     return similarity_scores
 
 def get_top_timeframes(similarity_scores, user_prompts):
@@ -121,8 +109,10 @@ def extract_youtube_id(url):
 def main(video_url, user_prompts):
     download_path = './download'
     os.makedirs(download_path, exist_ok=True)
-    # download_video(video_url)
-    video_path = "./download/" + "eLJ5MoSPjVE.mp4"
+    
+    download_video(video_url)
+    video_id = extract_youtube_id(video_url)
+    video_path = os.path.join(download_path, f"{video_id}.mp4")
 
     print(f"Video path for processing: {video_path}")
 
@@ -131,7 +121,7 @@ def main(video_url, user_prompts):
     top_timeframes = get_top_timeframes(similarity_scores, user_prompts)
     final_timeframes = generate_timeframes_for_editing(top_timeframes)
 
-    output_path = os.path.join(".", "output", f"{extract_youtube_id(video_url)}_output_video.mp4")
+    output_path = os.path.join(".", "output", f"{video_id}_output_video.mp4")
     os.makedirs(os.path.dirname(output_path), exist_ok=True)
     
     print(f"Timeframes for extraction: {final_timeframes}")
@@ -141,10 +131,12 @@ def main(video_url, user_prompts):
 if __name__ == "__main__":
     import time
     start_time = time.time()
-    video_url = "https://youtu.be/eLJ5MoSPjVE?feature=shared" # change link
-    user_prompts = ["header goal", "freekick goal", "ronaldo celebration", "sliding tackle"] # Up to 4 prompts
+    video_url = "https://youtu.be/cI89stp2YsE?si=W6XmkW-04073hioO" # change link
+    user_prompts = ["tackle","yellow card"] # Up to 4 prompts
     main(video_url, user_prompts)
     print(time.time() - start_time)
+
+
 
 
 

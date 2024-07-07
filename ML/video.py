@@ -145,7 +145,7 @@ class TestCaseGenerator:
                 "ffmpeg", 
                 "-y", 
                 "-i", clip_path, 
-                "-vf", f"select=eq(n\,{frame_no})", 
+                "-vf", r"select=eq(n\,{})".format(frame_no), 
                 "-vsync", "vfr", 
                 "-q:v", "2", 
                 output_path
