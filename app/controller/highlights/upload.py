@@ -66,6 +66,6 @@ async def upload_controller(file: SpooledTemporaryFile, prompt: List[str]):
     )
 
     # TODO: Send to worker (celery)
-    generate_highlights.apply_async((task_id, s3_file_path, prompt))
+    generate_highlights.delay(task_id, s3_file_path, prompt)
 
     return task_id

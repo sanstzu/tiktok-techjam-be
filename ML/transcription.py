@@ -10,7 +10,7 @@ import concurrent.futures
 import numpy as np
 import json
 import dotenv
-import utils as utils
+import ML.utils as utils
 import uuid
 
 dotenv.load_dotenv()

@@ -8,9 +8,8 @@ import numpy as np
 from sklearn.metrics.pairwise import cosine_similarity
 from datetime import timedelta
 import json
-from video import extract_youtube_id
 import dotenv
-import utils as utils
+import ML.utils as utils
 
 # Ensure the key.py file is in the same directory
 dotenv.load_dotenv()

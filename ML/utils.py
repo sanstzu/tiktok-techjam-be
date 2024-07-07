@@ -1,7 +1,6 @@
 import hashlib
 import os
 import json
-import numpy
 
 CAPTION_FILE_DIR = os.path.join(".", "cache", "captions")
 TRANSCRIPTION_FILE_DIR = os.path.join(".", "cache", "transcriptions")

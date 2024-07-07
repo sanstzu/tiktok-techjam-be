@@ -1,15 +1,14 @@
 import os
 import certifi
 import ssl
-import yt_dlp as youtube_dl
-from caption import get_caption_score
-from transcription import get_transcription_score
-from edit_video import extract_and_concatenate_clips
+from ML.caption import get_caption_score
+from ML.transcription import get_transcription_score
+from ML.edit_video import extract_and_concatenate_clips
 from urllib.parse import urlparse, parse_qs
 import concurrent.futures
 import json
-from video import TestCaseGenerator
-import utils
+from ML.video import TestCaseGenerator
+import ML.utils as utils
 import hashlib
 
 # Set up custom SSL context using certifi
