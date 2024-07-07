@@ -14,9 +14,7 @@ async def get_user_videos_controller(user_id: str) -> List[VideoResponse]:
     LIMIT 50
     """
     try:
-        await db.connect()
         result = await db.fetch_all(query=query, values={"user_id": user_id})
-        await db.disconnect()
         videos = [VideoResponse(**video) for video in result]
         return videos
     except Exception as e:

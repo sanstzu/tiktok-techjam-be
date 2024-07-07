@@ -3,9 +3,10 @@ from fastapi.security import OAuth2PasswordBearer
 from fastapi.responses import JSONResponse
 from fastapi.middleware.cors import CORSMiddleware
 from .celery import create_task
-from app.database.db import get_db
+from app.database.db import connect_db, disconnect_db, get_db
 from app.routes import register_routes
 import time
+from contextlib import asynccontextmanager
 
 server = FastAPI(title="API", version="0.1.0")
 
@@ -31,14 +32,12 @@ async def get_session_user(request: Request, token: str = Depends(oauth2_scheme)
     """
     
     try:
-        await db.connect()
         result = await db.fetch_one(query=query, values={"session_token": session_token})
-        await db.disconnect()
         if result is None:
             raise HTTPException(status_code=401, detail="Session not found")
         return result["userId"]
     except Exception:
-        raise HTTPException(status_code=500, detail="Internal server error")
+        raise HTTPException(status_code=500, detail="Internal server error (middlewar)")
 
 original_openapi = server.openapi
 
@@ -85,6 +84,7 @@ async def add_session_user(request: Request, call_next):
 
 allowed_origins = [
     "https://tiktok-highlights.vercel.app",
+    "*",
 ]
 
 server.add_middleware(
@@ -95,6 +95,12 @@ server.add_middleware(
     allow_headers=["*"],
 )
 
+@asynccontextmanager
+async def lifespan(app: FastAPI):
+    await connect_db()
+    yield
+
+    await disconnect_db()
 
 @server.get("/example")
 async def example_route(request: Request):
