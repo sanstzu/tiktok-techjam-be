@@ -9,6 +9,8 @@ from urllib.parse import urlparse, parse_qs
 import concurrent.futures
 import json
 from video import TestCaseGenerator
+import utils
+import hashlib
 
 # Set up custom SSL context using certifi
 certifi_path = certifi.where()
@@ -106,13 +108,29 @@ def extract_youtube_id(url):
             return parsed_url.path.split('/')[2]
     return None
 
+def get_sha256(file_path):
+    sha256 = hashlib.sha256()
+    with open(file_path, "rb") as f:
+        while True:
+            data = f.read(4096)
+            if not data:
+                break
+            sha256.update(data)
+    return sha256.hexdigest()
+
 def main(video_url, user_prompts):
     download_path = './download'
     os.makedirs(download_path, exist_ok=True)
-    
-    download_video(video_url)
-    video_id = extract_youtube_id(video_url)
-    video_path = os.path.join(download_path, f"{video_id}.mp4")
+
+    video_id = get_sha256(video_url)
+    video_path = video_url
+
+
+    if not utils.is_embedding_cached(video_url): 
+        # this just pre process the video url
+        pass
+        download_video(video_url)
+        
 
     print(f"Video path for processing: {video_path}")
 
@@ -131,8 +149,8 @@ def main(video_url, user_prompts):
 if __name__ == "__main__":
     import time
     start_time = time.time()
-    video_url = "https://www.youtube.com/watch?v=Jg0TFzprzV0" # change link
-    user_prompts = ["tackle","yellow card","great goal"] # Up to 4 prompts
+    video_url = "./test-3.mp4" # change link
+    user_prompts = ["corner kick"] # Up to 4 prompts
     main(video_url, user_prompts)
     print(time.time() - start_time)
 

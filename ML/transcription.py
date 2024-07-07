@@ -10,6 +10,8 @@ import concurrent.futures
 import numpy as np
 import json
 import dotenv
+import utils as utils
+import uuid
 
 dotenv.load_dotenv()
 OPENAI_API_KEY = os.getenv("OPENAI_API_KEY")
@@ -79,6 +81,21 @@ def format_transcription_dict(transcription_dict, interval=5):
 def extract_audio(video_path, audio_path):
     video = VideoFileClip(video_path)
     video.audio.write_audiofile(audio_path, codec='mp3')
+    # compress audio
+    tmp_audio_path = os.path.join(".", "audio", f"{uuid}.mp3")
+    cmd = [
+        "ffmpeg",
+        "-y"
+        "-i",
+        audio_path,
+        "-map", "0:a:0",
+        "-b:a", "96k",
+        tmp_audio_path
+    ]   
+
+    os.cmd(cmd)
+    os.remove(audio_path)
+    os.rename(tmp_audio_path, audio_path)
 
 def extract_youtube_id(url):
     parsed_url = urlparse(url)
@@ -96,9 +113,13 @@ def extract_youtube_id(url):
     return None
 
 def get_transcription_dict(url):
-    video_id = extract_youtube_id(url)
-    audio_path = os.path.join(".", "download", f"{video_id}.mp3")
-    video_path = os.path.join(".", "download", f"{video_id}.mp4")
+    # Check cache if the file exists
+    if utils.is_embedding_cached(url):
+        return utils.get_dict_from_json(utils.get_embedding_file_path(url)[1])
+    
+    video_id = utils.get_sha256(url)
+    audio_path = os.path.join(".", "audio", f"{video_id}.mp3")
+    video_path = url 
     
     if not os.path.exists(audio_path):
         extract_audio(video_path, audio_path)
@@ -106,6 +127,8 @@ def get_transcription_dict(url):
     transcription = process_transcription(transcribe(audio_path))
     transcription_dict = format_transcription_dict(transcription)
 
+    # Save the transcription to cache
+    utils.save_dict_to_json(transcription, utils.get_embedding_file_path(url)[1])
     return transcription_dict
 
 def get_embedding(text, model):
@@ -134,14 +157,14 @@ def get_transcription_score(url, user_prompts):
     user_inputs = user_prompts
     embedding_model = 'text-embedding-3-small'
     transcription_dict = get_transcription_dict(url)
+    embedded_transcriptions = []
     n = len(transcription_dict)
 
-    embedded_transcriptions = process_embeddings_in_parallel(transcription_dict, embedding_model, n)
-    # save_dict_to_json(embedded_transcriptions, './results/embedded_transcriptions.json')
-    
     embedded_queries = []
     for user_input in user_inputs:
         embedded_queries.append(np.array(get_embedding(user_input, model=embedding_model)).reshape(1, -1))
+ 
+    embedded_transcriptions=  process_embeddings_in_parallel(transcription_dict, embedding_model, n)# save_dict_to_json(embedded_transcriptions, './results/embedded_transcriptions.json')
 
     similarity_result = {}
 
@@ -152,5 +175,6 @@ def get_transcription_score(url, user_prompts):
             scores.append(score)
         similarity_result[timeframe] = scores
     
+    print("transcript done")
     return similarity_result
 
