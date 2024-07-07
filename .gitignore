@@ -129,11 +129,19 @@ ENV/
 env.bak/
 venv.bak/
 tiktok_env/
+ENV_NAME/
 
 # Videos and Frames
 ML/frames
 ML/download
 ML/key.py
+ML/testing.txt
+ML/prompt.txt
+ML/audio
+ML/tmp
+ML/results
+ML/testing.ipynb
+output/
 
 # Spyder project settings
 .spyderproject
@@ -168,4 +176,10 @@ cython_debug/
 
 # Add postgres-data from docker
 postgres-data/
-tmp/
+download/G-mmtUxSt5k.mp4
+download/G-mmtUxSt5k.mp3
+download/*
+tmp/*
+audio/*
+frames/*
+results/*
