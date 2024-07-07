@@ -5,11 +5,10 @@ from app.controller.ping.hello_user import hello_user_controller
 router = APIRouter(prefix="/ping", tags=["Ping"])
 
 @router.get("/")
-def hello_user(
-    user: str,
-    password: str  
+async def hello_user(
+
 ): 
     """
     Hello world! 
     """
-    return hello_user_controller(user, password)
+    return hello_user_controller()
