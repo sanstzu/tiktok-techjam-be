@@ -2,7 +2,7 @@ import os
 import re
 import cv2
 import datetime
-import sys
+import hashlib
 import shutil
 import subprocess
 from pytube import YouTube
@@ -33,10 +33,24 @@ def file_list(folder):
 def run_command(cmd):
     subprocess.run(cmd)
 
+def get_sha256(file_path):
+    sha256 = hashlib.sha256()
+    with open(file_path, "rb") as f:
+        while True:
+            data = f.read(4096)
+            if not data:
+                break
+            sha256.update(data)
+    return sha256.hexdigest()
+
 class TestCaseGenerator:
-    def __init__ (self, url, executor):
-        self.url = url
+    def __init__ (self, video_path, executor, skip_extract_frames=False):
+        self.video_path = video_path
         self.executor = executor
+        self.skip_extract_frames = skip_extract_frames
+
+        id = get_sha256(self.video_path)
+        self.id = id
 
     def execute (self):
         if os.path.exists(download_output) == False:
@@ -51,15 +65,26 @@ class TestCaseGenerator:
         if os.path.exists(tmp_folder) == False:
             os.mkdir(tmp_folder)
 
-        output = self.__download()
-        merged_path = self.__merge_video_audio(output[0], output[1])
+        # output = self.__download()
+
+        # merged_path = self.__merge_video_audio(output[0], output[1])
+
+        merged_path = self.video_path
+       
+
         folder_path = self.__split_video(merged_path)
-        self.__extract_frames(folder_path)
-        self.__extract_audio(output[1])
+        if self.skip_extract_frames == True:
+            pass
+        else:
+            self.__extract_audio(folder_path)
+            # remove audio mp3
+            os.remove(os.path.join(folder_path, "audio.mp3"))
+            self.__extract_frames(folder_path)
+            
 
 
     def __download(self):
-        id = extract_youtube_id(self.url)
+        id = self.id
         file_name = f"{id}.mp4"
         audio_file_name = f"{id}.mp3"
         output_path = os.path.join(download_output, file_name)
@@ -87,7 +112,7 @@ class TestCaseGenerator:
         if os.path.exists(output_folder) == False:
             os.mkdir(output_folder)
 
-        output_video = os.path.join(tmp_folder, "merged", f"{extract_youtube_id(self.url)}.mp4")
+        output_video = os.path.join(tmp_folder, "merged", f"{self.id}.mp4")
 
         #  ffmpeg -i "$video" -i "$audio_file" -c:v copy -c:a aac -strict experimental "./tmp/combined/${id}.mp4"
         cmd = [
@@ -106,7 +131,7 @@ class TestCaseGenerator:
         return output_video
     
     def __split_video(self, video_path):
-        output_folder = os.path.join(tmp_folder, "clips", extract_youtube_id(self.url))
+        output_folder = os.path.join(tmp_folder, "clips", self.id)
         if os.path.exists(output_folder) == False:
             os.mkdir(output_folder)
 
@@ -129,16 +154,35 @@ class TestCaseGenerator:
 
         subprocess.run(cmd)
 
+        # extract audio from the video output = audio.mp3
+        # ffmpeg -i "$input_file" -q:a 0 -map a "./audio/${id}.mp3"
+        cmd = [
+            "ffmpeg",
+            "-y",
+            "-i",
+            video_path,
+            "-q:a",
+            "0",
+            "-map",
+            "a",
+            os.path.join(output_folder, "audio.mp3")
+        ]
+
+        subprocess.run(cmd)
+
         return output_folder
     
     def __extract_frames(self, clips_path):
         # Extract the first frame
         # ffmpeg -i "$clip" -vf "select=eq(n\,0)" -vsync vfr -q:v 2 "./frames/${id}/$(basename "$clip" .mp4).jpg"
-        output_folder = os.path.join(frames_output, extract_youtube_id(self.url))
+        output_folder = os.path.join(frames_output, self.id)
         if os.path.exists(output_folder) == False:
             os.mkdir(output_folder)
 
         clips = file_list(clips_path)
+
+
+        # remove au
 
         def get_frame(clip_path, frame_no, output_path):
             cmd = [
@@ -180,22 +224,24 @@ class TestCaseGenerator:
             get_frames(clip)
             
 
-    def __extract_audio(self, audio_path):
+    def __extract_audio(self, clips_path):
         # Extract the audio
         # ffmpeg -i "$clip" -q:a 0 -map a "./audio/${id}/$(basename "$clip" .mp4).mp3"
         output_folder = os.path.join(audio_output)
         if os.path.exists(output_folder) == False:
             os.mkdir(output_folder)
 
-        shutil.copyfile(audio_path, os.path.join(output_folder, f"{extract_youtube_id(self.url)}.mp3"))
+        audio_file = os.path.join(clips_path, "audio.mp3")
+
+        shutil.copyfile(audio_file, os.path.join(output_folder, f"{self.id}.mp3"))
 
 if __name__ == "__main__":
     # calculate start time
     start_time = datetime.datetime.now()
 
-    url = "https://youtube.com/watch?v=eLJ5MoSPjVE"
+    video_path = "./test.mp4" 
     with ThreadPoolExecutor() as executor:
-        generator = TestCaseGenerator(url, executor)
+        generator = TestCaseGenerator(video_path, executor)
         generator.execute()
 
     # calculate end time
