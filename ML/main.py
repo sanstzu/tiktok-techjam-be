@@ -145,6 +145,7 @@ def main(video_url, user_prompts):
     print(f"Timeframes for extraction: {final_timeframes}")
     extract_and_concatenate_clips(video_path, final_timeframes, output_path)
     print(f"Video saved at {output_path}")
+    return output_path
 
 if __name__ == "__main__":
     import time
