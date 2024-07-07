@@ -80,22 +80,8 @@ def format_transcription_dict(transcription_dict, interval=5):
 
 def extract_audio(video_path, audio_path):
     video = VideoFileClip(video_path)
-    video.audio.write_audiofile(audio_path, codec='mp3')
-    # compress audio
-    tmp_audio_path = os.path.join(".", "audio", f"{uuid}.mp3")
-    cmd = [
-        "ffmpeg",
-        "-y"
-        "-i",
-        audio_path,
-        "-map", "0:a:0",
-        "-b:a", "96k",
-        tmp_audio_path
-    ]   
+    video.audio.write_audiofile(audio_path, codec='mp3', bitrate='64k')
 
-    os.cmd(cmd)
-    os.remove(audio_path)
-    os.rename(tmp_audio_path, audio_path)
 
 def extract_youtube_id(url):
     parsed_url = urlparse(url)

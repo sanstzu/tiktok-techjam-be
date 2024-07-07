@@ -53,16 +53,16 @@ class TestCaseGenerator:
 
     def execute (self):
         if os.path.exists(download_output) == False:
-            os.mkdir(download_output)
+            os.makedirs(download_output)
         
         if os.path.exists(frames_output) == False:
-            os.mkdir(frames_output)
+            os.makedirs(frames_output)
 
         if os.path.exists(audio_output) == False:
-            os.mkdir(audio_output)
+            os.makedirs(audio_output)
 
         if os.path.exists(tmp_folder) == False:
-            os.mkdir(tmp_folder)
+            os.makedirs(tmp_folder)
 
         # output = self.__download()
 
@@ -109,7 +109,7 @@ class TestCaseGenerator:
     def __merge_video_audio(self, video_path, audio_path):
         output_folder = os.path.join(tmp_folder, "merged")
         if os.path.exists(output_folder) == False:
-            os.mkdir(output_folder)
+            os.makedirs(output_folder)
 
         output_video = os.path.join(tmp_folder, "merged", f"{self.id}.mp4")
 
@@ -132,7 +132,7 @@ class TestCaseGenerator:
     def __split_video(self, video_path):
         output_folder = os.path.join(tmp_folder, "clips", self.id)
         if os.path.exists(output_folder) == False:
-            os.mkdir(output_folder)
+            os.makedirs(output_folder)
 
          # Split the video into 5-second clips
         # ffmpeg -i "$input_file" -c copy -map 0 -segment_time 5 -f segment -reset_timestamps 1 "./tmp/clips/${id}/%03d.mp4"
@@ -176,7 +176,7 @@ class TestCaseGenerator:
         # ffmpeg -i "$clip" -vf "select=eq(n\,0)" -vsync vfr -q:v 2 "./frames/${id}/$(basename "$clip" .mp4).jpg"
         output_folder = os.path.join(frames_output, self.id)
         if os.path.exists(output_folder) == False:
-            os.mkdir(output_folder)
+            os.makedirs(output_folder)
 
         clips = file_list(clips_path)
 
@@ -228,7 +228,7 @@ class TestCaseGenerator:
         # ffmpeg -i "$clip" -q:a 0 -map a "./audio/${id}/$(basename "$clip" .mp4).mp3"
         output_folder = os.path.join(audio_output)
         if os.path.exists(output_folder) == False:
-            os.mkdir(output_folder)
+            os.makedirs(output_folder)
 
         audio_file = os.path.join(clips_path, "audio.mp3")
 
