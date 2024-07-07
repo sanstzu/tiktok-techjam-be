@@ -9,9 +9,11 @@ from sklearn.metrics.pairwise import cosine_similarity
 from datetime import timedelta
 import json
 from video import extract_youtube_id
+import dotenv
 
 # Ensure the key.py file is in the same directory
-from key import OPENAI_API_KEY
+dotenv.load_dotenv()
+OPENAI_API_KEY = os.getenv("OPENAI_API_KEY")
 
 # Initialize client
 api_key = OPENAI_API_KEY

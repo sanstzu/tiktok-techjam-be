@@ -1,5 +1,4 @@
 from openai import OpenAI
-from key import OPENAI_API_KEY
 from sklearn.metrics.pairwise import cosine_similarity
 from moviepy.editor import VideoFileClip
 from datetime import timedelta
@@ -10,6 +9,11 @@ from urllib.parse import urlparse, parse_qs
 import concurrent.futures
 import numpy as np
 import json
+import dotenv
+
+dotenv.load_dotenv()
+OPENAI_API_KEY = os.getenv("OPENAI_API_KEY")
+
 
 client = OpenAI(api_key=OPENAI_API_KEY)
 api_key = OPENAI_API_KEY
