@@ -4,7 +4,6 @@ import os
 import concurrent.futures
 import base64
 import requests
-import math
 import numpy as np
 from sklearn.metrics.pairwise import cosine_similarity
 from datetime import timedelta
@@ -89,6 +88,9 @@ def get_embedding(text, model):
     return client.embeddings.create(input=[text], model=model).data[0].embedding
 
 def process_embeddings_in_parallel(captions_dict, model, num_threads):
+    if num_threads == 0:
+        num_threads = 1  # Ensure at least one thread is used
+
     embedded_frame = {}
 
     with concurrent.futures.ThreadPoolExecutor(max_workers=num_threads) as executor:
@@ -114,13 +116,13 @@ def get_caption_score(url, user_prompts):
     image_paths = list_files(directory)
 
     # Get User Input
-    user_inputs = user_prompts
+    user_prompt = " ".join(user_prompts)
     prompt_text = get_sys_prompt('prompt.txt')
     results = []
     captions_dict = {}
 
     # Captioning
-    results = process_images_in_parallel(image_paths, api_key, prompt_text, user_prompts, num_threads=30, frames_per_request=3)
+    results = process_images_in_parallel(image_paths, api_key, prompt_text, user_prompt, num_threads=30, frames_per_request=3)
     for i in range(len(results)):
         try:
             caption = results[i]['choices'][0]['message']['content']
@@ -132,10 +134,9 @@ def get_caption_score(url, user_prompts):
     # Embedding
     embedding_model = 'text-embedding-3-small'
     embedded_captions = process_embeddings_in_parallel(captions_dict, model=embedding_model, num_threads=n)
-    # save_dict_to_json(embedded_captions, './results/embedded_captions.json')
     
     embedded_queries = []
-    for user_input in user_inputs:
+    for user_input in user_prompts:
         embedded_queries.append(np.array(get_embedding(user_input, model=embedding_model)).reshape(1, -1))
 
     similarity_result = {}
@@ -148,4 +149,5 @@ def get_caption_score(url, user_prompts):
         similarity_result[timeframe] = scores
     
     return similarity_result
+
 
