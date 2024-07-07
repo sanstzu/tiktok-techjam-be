@@ -8,7 +8,15 @@ from app.routes import register_routes
 import time
 from contextlib import asynccontextmanager
 
-server = FastAPI(title="API", version="0.1.0")
+@asynccontextmanager
+async def lifespan(app: FastAPI):
+    print("Starting server")
+    await connect_db()
+    yield
+    print("Stopping server")
+    await disconnect_db()
+
+server = FastAPI(title="API", version="0.1.0", lifespan=lifespan)
 
 # debug
 server.ts = 0
@@ -97,12 +105,7 @@ server.add_middleware(
     allow_headers=["*"],
 )
 
-@asynccontextmanager
-async def lifespan(app: FastAPI):
-    await connect_db()
-    yield
 
-    await disconnect_db()
 
 @server.get("/example")
 async def example_route(request: Request):
