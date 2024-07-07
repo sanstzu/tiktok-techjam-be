@@ -1,10 +1,9 @@
 from fastapi import FastAPI, HTTPException, Depends, Request
 from fastapi.security import OAuth2PasswordBearer
 from fastapi.responses import JSONResponse
+from fastapi.middleware.cors import CORSMiddleware
 from .celery import create_task
 from app.database.db import get_db
-
-
 from app.routes import register_routes
 import time
 
@@ -83,6 +82,19 @@ async def add_session_user(request: Request, call_next):
     request.state.user_id = user_id
     response = await call_next(request)
     return response
+
+allowed_origins = [
+    "https://tiktok-highlights.vercel.app",
+]
+
+server.add_middleware(
+    CORSMiddleware,
+    allow_origins=allowed_origins,
+    allow_credentials=True,
+    allow_methods=["*"],
+    allow_headers=["*"],
+)
+
 
 @server.get("/example")
 async def example_route(request: Request):
