@@ -9,13 +9,15 @@ router = APIRouter(prefix="/highlights", tags=["highlights"])
 
 @router.post("/upload", response_model=str)
 async def upload_video(
+    request: Request,
     file: UploadFile,
     prompt: List[str]
 ):
     """
     Starts task to highlight a video
     """
-    return await upload_controller(file.file, prompt)
+    user_id = request.state.user_id
+    return await upload_controller(file.file, prompt, user_id)
 
 @router.get("/{task_id}/results", response_model=HighlightsResultResponse)
 async def get_video_result(task_id: str): 
