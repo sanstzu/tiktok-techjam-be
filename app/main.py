@@ -36,8 +36,10 @@ async def get_session_user(request: Request, token: str = Depends(oauth2_scheme)
         if result is None:
             raise HTTPException(status_code=401, detail="Session not found")
         return result["userId"]
-    except Exception:
-        raise HTTPException(status_code=500, detail="Internal server error (middlewar)")
+    except Exception as e:
+        err = str(e)
+        print("ERROR: ", err)
+        raise HTTPException(status_code=500, detail=f"Internal server error: {err}")
 
 original_openapi = server.openapi
 
