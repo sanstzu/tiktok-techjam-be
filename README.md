@@ -33,20 +33,13 @@ pip install -r requirements.txt
 
 Copy the `.env.example` file to `.env` and fill in the required environment variables.
 
-### Running the Database
-
-To run the database, use docker compose with the following command.
-
-```shell
-docker compose --env-file .env up -d
-```
-
 ### Running the Application
 
 To run the project, use the following command.
 
 ```shell
-fastapi dev app/main.py
+docker-compose build
+docker-compose up
 ```
 
 ## To-do List
