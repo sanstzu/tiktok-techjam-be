@@ -39,11 +39,11 @@ async def post_video(
     return await post_video_controller(post_request, task_id, user_id)
 
 
-@router.get("/{id}/status", response_model=str)
-def video_status(
+@router.get("/{id}/status", response_model=int)
+async def video_status(
     id: str
 ): 
     """
     Get highlight status, to check progress
     """
-    return get_status_controller(id)
+    return await get_status_controller(id)

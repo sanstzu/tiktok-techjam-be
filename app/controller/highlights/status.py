@@ -11,12 +11,18 @@ zero_percent_timestamp = 0
 def __get_debug_percentage():
     return app.get_timestamp_percentage()
 
-def get_status_controller(id: str):
-
-    if id is None:
-        raise HTTPException(status_code=400, detail="id is required")
-    elif id != "testid1":
-        raise HTTPException(status_code=404, detail="id not found")
-    else:
-        # TODO: Get from celery queue to check how many tasks in the group are done
-        return f"{__get_debug_percentage():.9f}"
+async def get_status_controller(id: str):
+    # get from tasks table, return 0 if  output_url is null
+    db = app.get_db()
+    query = """
+    SELECT output_url FROM tasks WHERE id = :id
+    """
+    try:
+        result = await db.fetch_one(query=query, values={"id": id})
+        if result is None:
+            raise HTTPException(status_code=404, detail="Task not found")
+        if result["output_url"] is None:
+            return 0
+        return 100
+    except Exception as e:
+        raise HTTPException(status_code=500, detail="Internal server error: " + str(e))
