@@ -21,7 +21,7 @@ async def get_status_controller(id: str):
         result = await db.fetch_one(query=query, values={"id": id})
         if result is None:
             raise HTTPException(status_code=404, detail="Task not found")
-        if result["output_url"] is None:
+        if result["output_url"] == "" or result["output_url"] is None:
             return 0
         return 100
     except Exception as e:
