@@ -105,12 +105,6 @@ def extract_and_concatenate_clips(video_path, timeframes, output_path):
     # os.system(ffmpeg_command)
     concatenate_videos(output_path, *clips_path)
 
-     # remove the old file
-    os.remove(output_path)
-
-    # rename the tmp file
-    os.rename(tmp_path, output_path)
-
 # # Example usage
 # video_path = "./download/Gl7m0cVa37k.mp4"
 # video_id = os.path.splitext(os.path.basename(video_path))[0]

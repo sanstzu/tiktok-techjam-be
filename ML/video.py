@@ -155,15 +155,14 @@ class TestCaseGenerator:
 
         # extract audio from the video output = audio.mp3
         # ffmpeg -i "$input_file" -q:a 0 -map a "./audio/${id}.mp3"
+        # bit rate is 64k
         cmd = [
             "ffmpeg",
             "-y",
             "-i",
             video_path,
-            "-q:a",
-            "0",
-            "-map",
-            "a",
+            "-b:a",
+            "64k",
             os.path.join(output_folder, "audio.mp3")
         ]
 

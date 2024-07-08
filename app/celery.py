@@ -42,7 +42,12 @@ def create_task(prompt: str):
 def generate_highlights(task_id: str, s3_path: str, prompt: List[str]):
     tmp_file = os.path.join("tmp", f"{str(uuid.uuid4())}.mp4")
     utils.download_from_bucket(tmp_file, s3_path, "tiktok-techjam")
-    output_file = ml_main.main(tmp_file, prompt)
+    output_file = ""
+    try:
+        output_file = ml_main.main(tmp_file, prompt)
+    except Exception as e:
+        print(e)
+        raise e
 
     utils.upload_to_bucket(output_file, f"highlights/{task_id}.mp4", "tiktok-techjam")
 
