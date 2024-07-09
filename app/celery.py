@@ -60,10 +60,10 @@ def generate_highlights(task_id: str, s3_path: str, prompt: List[str]):
             await db.execute(
                 """
                 UPDATE tasks
-                SET output_url = :output_url
+                SET output_url = :output_url, status = :status
                 WHERE id = :id
                 """,
-                {"output_url": url, "id": task_id}
+                {"output_url": url, "id": task_id, "status": "DONE"}
             )
         finally:
             await db.disconnect()
