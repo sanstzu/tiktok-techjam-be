@@ -12,7 +12,7 @@ def __get_debug_percentage():
     return app.get_timestamp_percentage()
 
 async def get_status_controller(id: str):
-    # get from tasks table, return 0 if  output_url is null
+    # get from tasks table, return 0 if output_url is null
     db = app.get_db()
     query = """
     SELECT output_url FROM tasks WHERE id = :id
