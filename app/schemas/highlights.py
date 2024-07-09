@@ -1,4 +1,5 @@
 from pydantic import BaseModel
+from typing import Optional
 
 class HighlightsResultResponse(BaseModel):
     id: str
@@ -6,5 +7,5 @@ class HighlightsResultResponse(BaseModel):
 
 class HighlightsPostRequest(BaseModel):
     video_url: str
-    music: str
-    caption: str
+    music: Optional[str] = None
+    caption: Optional[str] = None
