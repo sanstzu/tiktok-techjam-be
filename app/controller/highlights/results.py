@@ -33,6 +33,17 @@ async def post_video_controller(post_request: HighlightsPostRequest, task_id: st
     try:
         current_utc_time = datetime.datetime.now(datetime.timezone.utc) 
         await db.execute(query=query, values={"id": str(uuid.uuid4()), "video_url": post_request.video_url, "caption": post_request.caption, "music": post_request.music, "user_id": user_id, "task_id": task_id, "post_time": current_utc_time})
+        await db.execute(
+            """
+            UPDATE tasks
+            SET status = :status
+            WHERE id = :task_id
+            """,
+            {
+                "task_id": task_id, 
+                "status": "UPLOADED"
+            }
+        )
 
         return "Video metadata updated"
     except Exception as e:
