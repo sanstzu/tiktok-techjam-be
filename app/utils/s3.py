@@ -6,9 +6,9 @@ s3_client = boto3.client('s3',
             aws_secret_access_key=config.AWS_SECRET_ACCESS_KEY
 )
 
-def upload_to_bucket(path: str, file_name:str, bucket_name: str):
+def upload_to_bucket(path: str, file_name:str, bucket_name: str, content_type: str = 'video/mp4'):
     try:
-        s3_client.upload_file(path, bucket_name, file_name)
+        s3_client.upload_file(path, bucket_name, file_name, ExtraArgs={'ContentType': content_type})
         print(f"File uploaded successfully to {bucket_name}/{file_name}")
     except Exception as e:
         print(f"Error uploading file to {bucket_name}/{file_name}: {e}")

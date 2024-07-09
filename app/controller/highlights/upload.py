@@ -54,15 +54,16 @@ async def upload_controller(file: SpooledTemporaryFile, prompt: List[str], user_
         db = app.get_db()
         await db.execute(
             f"""
-            INSERT INTO tasks(id, prompt, output_url, source_url, user_id) VALUES
-            (:id, :prompt, :output_url, :source_url, :user_id)
+            INSERT INTO tasks(id, prompt, output_url, source_url, user_id, status) VALUES
+            (:id, :prompt, :output_url, :source_url, :user_id, :status)
             """,
             {
                 "id": task_id,
                 "prompt": json.dumps(prompt),
                 "output_url": "",
                 "source_url": url,
-                "user_id": user_id
+                "user_id": user_id,
+                "status": "PROCESSING"
             }
         )
 
@@ -75,4 +76,16 @@ async def upload_controller(file: SpooledTemporaryFile, prompt: List[str], user_
         return task_id
 
     except Exception as e:
+        if 'task_id' in locals():
+            await db.execute(
+                """
+                UPDATE tasks
+                SET status = :status
+                WHERE id = :id
+                """,
+                {
+                    "id": task_id,
+                    "status": "FAILED"
+                }
+            )
         raise HTTPException(status_code=500, detail="Internal server error: " + str(e))
